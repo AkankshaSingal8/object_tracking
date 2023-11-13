@@ -13,15 +13,7 @@ IMAGE_SHAPE = (144, 256, 3)
 IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
 DROPOUT = 0.1
-DEFAULT_CFC_CONFIG = {
-    "clipnorm": 1,
-    "backbone_activation": "silu",
-    "backbone_dr": 0.1,
-    "forget_bias": 1.6,
-    "backbone_units": 128,
-    "backbone_layers": 1,
-    "weight_decay": 1e-06
-}
+
 DEFAULT_NCP_SEED = 22222
 
 def generate_augmentation_layers(x, augmentation_params: Dict, single_step: bool):
