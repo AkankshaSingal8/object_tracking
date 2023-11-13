@@ -1,6 +1,6 @@
 import os
 from typing import Iterable, Dict
-
+import tensorflow as tf
 import kerasncp as kncp
 from kerasncp.tf import LTCCell, WiredCfcCell
 from tensorflow import keras
@@ -22,6 +22,7 @@ DEFAULT_NCP_SEED = 22222
 # if single_step, control output is (batch, 4), otherwise (batch, seq_len, 4)
 # if single_step, hidden outputs typically have shape (batch, hidden_dimension)
 
+#generate_ncp_model(1030, IMAGE_SHAPE, None, 32, DEFAULT_NCP_SEED, True, False)
 
 def generate_ncp_model(seq_len,
                        image_shape,
@@ -142,3 +143,5 @@ def generate_network_trunk(seq_len,
     x = wrap_time(keras.layers.Dropout(rate=DROPOUT), single_step)(x)
 
     return inputs, x
+
+mymodel = generate_ncp_model(1030, IMAGE_SHAPE, None, 32, DEFAULT_NCP_SEED, True, False)
