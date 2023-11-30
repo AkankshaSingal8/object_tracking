@@ -54,3 +54,19 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
     datasets.append(dataset)
 
     return datasets
+
+
+data_shift: int = 1
+data_stride: int = 1
+decay_rate: float = 0.95
+val_split: float = 0.1
+label_scale: float = 1
+extra_data_dir: str = None
+
+with tf.device('/cpu:0'):
+    training_dataset = get_dataset_multi('Test1', IMAGE_SHAPE, 1030, data_shift, data_stride,
+    val_split, label_scale,extra_data_dir)
+
+print('\n\nTraining Dataset Size: %d\n\n' % tlen(training_dataset))
+
+#training_dataset = training_dataset.shuffle(100).batch(batch_size)

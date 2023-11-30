@@ -5,6 +5,13 @@ import kerasncp as kncp
 from kerasncp.tf import LTCCell, WiredCfcCell
 from tensorflow import keras
 
+
+import numpy as np
+from matplotlib.image import imread
+from tqdm import tqdm
+from PIL import Image
+
+
 IMAGE_SHAPE = (144, 256, 3)
 IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
@@ -145,3 +152,20 @@ def generate_network_trunk(seq_len,
     return inputs, x
 
 mymodel = generate_ncp_model(1030, IMAGE_SHAPE, None, 32, DEFAULT_NCP_SEED, True, False)
+
+decay_rate: float = 0.95
+lr: float = 0.001
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
+                                                              decay_rate=decay_rate, staircase=True)
+#Adam optimizer
+optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
+mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
+
+epochs: int = 30
+callbacks: List = None
+#setting validation data to None
+history = mymodel.fit(x=training_dataset, validation_data=None, epochs=epochs,
+                        use_multiprocessing=False, workers=1, max_queue_size=5, verbose=1, callbacks=callbacks)
+print(history)
+accuracy = mymodel.evaluate(x=training_dataset)
+print('Accuracy: %.2f' % (accuracy*100))
