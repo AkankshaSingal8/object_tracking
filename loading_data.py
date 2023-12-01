@@ -1,29 +1,86 @@
+import os
+
+import numpy as np
 import tensorflow as tf
-from tensorflow.keras.preprocessing import image_dataset_from_directory
+from PIL import Image
+from matplotlib.image import imread
+from tqdm import tqdm
 
-IMAGE_SHAPE = (144, 256, 3)
-IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
-DEFAULT_NCP_SEED = 22222
+def get_output_normalization(root):
+    training_output_mean_fn = os.path.join(root, 'stats', 'training_output_means.csv')
+    if os.path.exists(training_output_mean_fn):
+        print('Loading training data output means from: %s' % training_output_mean_fn)
+        output_means = np.genfromtxt(training_output_mean_fn, delimiter=',')
+    else:
+        output_means = np.zeros(4)
 
-def load_dataset_from_directory(directory, image_shape, batch_size, seed):
-    # Load dataset
-    dataset = image_dataset_from_directory(
-        directory,
-        shuffle=True,
-        batch_size=batch_size,
-        image_size=image_shape[:2],
-        seed=seed
-    )
+    training_output_std_fn = os.path.join(root, 'stats', 'training_output_stds.csv')
+    if os.path.exists(training_output_std_fn):
+        print('Loading training data output std from: %s' % training_output_std_fn)
+        output_stds = np.genfromtxt(training_output_std_fn, delimiter=',')
+    else:
+        output_stds = np.ones(4)
 
-    # Normalization and other preprocessing steps can be added here if needed
-    # For example, dataset = dataset.map(lambda x, y: (preprocess_function(x), y))
+    return output_means, output_stds
+
+
+def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
+    file_ending = 'png'
+    IMAGE_SHAPE = (144, 256, 3)
+    IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
+
+    def sub_to_batch(sub_feature, sub_label):
+        sfb = sub_feature.batch(seq_len, drop_remainder=True)
+        slb = sub_label.batch(seq_len, drop_remainder=True)
+        return tf.data.Dataset.zip((sfb, slb))
+        # return sub.batch(seq_len, drop_remainder=True)
+
+    
+    datasets = []
+
+    #output_means, output_stds = get_output_normalization(root)
+
+    
+    labels = np.genfromtxt('Test1/data_out.csv', delimiter=',', skip_header=1, dtype=np.float32)
+    print("labels", labels)
+    # if labels.shape[1] == 4:
+    #     labels = (labels - output_means) / output_stds
+    #     # labels = labels * label_scale
+    # elif labels.shape[1] == 5:
+    #     labels = (labels[:, 1:] - output_means) / output_stds
+    #     # labels = labels[:,1:] * label_scale
+    # else:
+    #     raise Exception('Wrong size of input data (expected 4, got %d' % labels.shape[1])
+    
+    labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
+    # n_images = len(os.listdir(os.path.join(root, d))) - 1
+    n_images = len([fn for fn in os.listdir('./Test1') if file_ending in fn])
+    print(n_images)
+    print("no of imgs", n_images)
+    # dataset_np = np.empty((n_images, 256, 256, 3), dtype=np.uint8)
+    dataset_np = np.empty((n_images, *image_size), dtype=np.uint8)
+
+    for ix in range(n_images):
+        # dataset_np[ix] = imread(os.path.join(root, d, '%06d.jpeg' % ix))
+        img_file_name = 'Test1/Image' + str(ix + 1) + '.'+ file_ending
+        img = Image.open(img_file_name)
+        img = img.resize(IMAGE_SHAPE_CV)
+        # dataset_np[ix] = img[img.height - image_size[0]:, :, :]
+        dataset_np[ix] = img
+
+    images_dataset = tf.data.Dataset.from_tensor_slices(dataset_np)
+    dataset = tf.data.Dataset.zip((images_dataset, labels_dataset))
+    # dataset = dataset.window(seq_len, shift=shift, stride=stride, drop_remainder=True).flat_map(sub_to_batch)
+    # datasets.append(dataset)
 
     return dataset
 
-# Load your dataset
-train_dataset = load_dataset_from_directory('./Test1', IMAGE_SHAPE, 32, DEFAULT_NCP_SEED)
-print(train_dataset)
-
-# Example of how to use the dataset in model training
-# mymodel.fit(train_dataset, epochs=num_epochs)
+IMAGE_SHAPE = (144, 256, 3)
+shift: int = 1
+stride: int = 1
+decay_rate: float = 0.95
+val_split: float = 0.1
+label_scale: float = 1
+seq_len = 1030
+dataset = load_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
