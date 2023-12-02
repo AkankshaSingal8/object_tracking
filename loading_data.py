@@ -71,10 +71,39 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
 
     images_dataset = tf.data.Dataset.from_tensor_slices(dataset_np)
     dataset = tf.data.Dataset.zip((images_dataset, labels_dataset))
-    # dataset = dataset.window(seq_len, shift=shift, stride=stride, drop_remainder=True).flat_map(sub_to_batch)
-    # datasets.append(dataset)
+    #dataset = dataset.window(seq_len, shift=shift, stride=stride, drop_remainder=True).flat_map(sub_to_batch)
+    #datasets.append(dataset)
 
     return dataset
+
+def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio, label_scale, extra_data_root=None):
+    ds = load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale)
+    print('n bags: %d' % len(ds))
+    cnt = 0
+
+    for d in ds:
+        for (ix, _) in enumerate(d):
+            pass
+            cnt += ix
+    print('n windows: %d' % cnt)
+
+    
+
+    val_ix = int(len(ds) * validation_ratio)
+    print('\nval_ix: %d\n' % val_ix)
+    #validation_datasets = ds[:val_ix]
+
+    training_datasets = ds[val_ix:]
+
+    # if either dataset has length 0, trying to call flat map raises error that return type is wrong
+    # assert len(training_datasets) > 0 and len(validation_datasets) > 0, f"Training or validation dataset has no points!" \
+    #                                                                     f"Train dataset len: {len(training_datasets)}" \
+    #                                                                     f"Val dataset len: {len(validation_datasets)}"
+    training = tf.data.Dataset.from_tensor_slices(training_datasets).flat_map(lambda x: x)
+    #validation = tf.data.Dataset.from_tensor_slices(validation_datasets).flat_map(lambda x: x)
+
+    #return training, validation
+    return training
 
 IMAGE_SHAPE = (144, 256, 3)
 shift: int = 1
@@ -83,4 +112,9 @@ decay_rate: float = 0.95
 val_split: float = 0.1
 label_scale: float = 1
 seq_len = 1030
-dataset = load_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
+val_split: float = 0.1
+label_scale: float = 1
+
+datasets = load_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
+#training_dataset = get_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
+print('load dataset shape', datasets.element_spec)
