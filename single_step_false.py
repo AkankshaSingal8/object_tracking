@@ -12,6 +12,7 @@ from tqdm import tqdm
 from PIL import Image
 
 import seaborn as sns
+import pandas as pd
 
 IMAGE_SHAPE = (144, 256, 3)
 IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
@@ -284,5 +285,7 @@ callbacks = None
 history = mymodel.fit(x=training_dataset, validation_data=None, epochs=epochs,verbose=1)
 print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
-print('Accuracy:' (accuracy))
+print('Accuracy:' ,accuracy)
 
+predictions = mymodel.predict(x=training_dataset)
+print(predictions)
