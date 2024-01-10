@@ -189,37 +189,39 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
     #output_means, output_stds = get_output_normalization(root)
 
     
-    labels = np.genfromtxt('Test1/data_out.csv', delimiter=',', skip_header=1, dtype=np.float32)
-    print("labels", labels)
-    # if labels.shape[1] == 4:
-    #     labels = (labels - output_means) / output_stds
-    #     # labels = labels * label_scale
-    # elif labels.shape[1] == 5:
-    #     labels = (labels[:, 1:] - output_means) / output_stds
-    #     # labels = labels[:,1:] * label_scale
-    # else:
-    #     raise Exception('Wrong size of input data (expected 4, got %d' % labels.shape[1])
+    for directory in range(1, 11):
+        csv_file_name = root + "/" + str(directory) + '/data_out.csv'
+        labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
+        print("labels", labels)
+        # if labels.shape[1] == 4:
+        #     labels = (labels - output_means) / output_stds
+        #     # labels = labels * label_scale
+        # elif labels.shape[1] == 5:
+        #     labels = (labels[:, 1:] - output_means) / output_stds
+        #     # labels = labels[:,1:] * label_scale
+        # else:
+        #     raise Exception('Wrong size of input data (expected 4, got %d' % labels.shape[1])
     
-    labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
-    # n_images = len(os.listdir(os.path.join(root, d))) - 1
-    n_images = len([fn for fn in os.listdir('./Test1') if file_ending in fn])
-    print(n_images)
-    print("no of imgs", n_images)
-    # dataset_np = np.empty((n_images, 256, 256, 3), dtype=np.uint8)
-    dataset_np = np.empty((n_images, *image_size), dtype=np.uint8)
+        labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
+        # n_images = len(os.listdir(os.path.join(root, d))) - 1
+        n_images = len([fn for fn in os.listdir('./' + root + "/" + str(directory)) if file_ending in fn])
+        print(n_images)
+        print("no of imgs", n_images)
+        # dataset_np = np.empty((n_images, 256, 256, 3), dtype=np.uint8)
+        dataset_np = np.empty((n_images, *image_size), dtype=np.uint8)
 
-    for ix in range(n_images):
-        # dataset_np[ix] = imread(os.path.join(root, d, '%06d.jpeg' % ix))
-        img_file_name = 'Test1/Image' + str(ix + 1) + '.'+ file_ending
-        img = Image.open(img_file_name)
-        img = img.resize(IMAGE_SHAPE_CV)
-        # dataset_np[ix] = img[img.height - image_size[0]:, :, :]
-        dataset_np[ix] = img
+        for ix in range(n_images):
+            # dataset_np[ix] = imread(os.path.join(root, d, '%06d.jpeg' % ix))
+            img_file_name = root + "/" + str(directory) +'/Image' + str(ix + 1) + '.'+ file_ending
+            img = Image.open(img_file_name)
+            img = img.resize(IMAGE_SHAPE_CV)
+            # dataset_np[ix] = img[img.height - image_size[0]:, :, :]
+            dataset_np[ix] = img
 
-    images_dataset = tf.data.Dataset.from_tensor_slices(dataset_np)
-    dataset = tf.data.Dataset.zip((images_dataset, labels_dataset))
-    dataset = dataset.window(seq_len, shift=shift, stride=stride, drop_remainder=True).flat_map(sub_to_batch)
-    datasets.append(dataset)
+        images_dataset = tf.data.Dataset.from_tensor_slices(dataset_np)
+        dataset = tf.data.Dataset.zip((images_dataset, labels_dataset))
+        dataset = dataset.window(seq_len, shift=shift, stride=stride, drop_remainder=True).flat_map(sub_to_batch)
+        datasets.append(dataset)
 
     return datasets
 
@@ -253,7 +255,8 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
     return training
 
 batch_size = None
-mymodel = generate_ncp_model(1030, IMAGE_SHAPE, None, batch_size, DEFAULT_NCP_SEED, False, False)
+seq_len = 64
+mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, None, batch_size, DEFAULT_NCP_SEED, False, False)
 
 decay_rate: float = 0.95
 lr: float = 0.001
@@ -269,12 +272,12 @@ stride: int = 1
 decay_rate: float = 0.95
 val_split: float = 0.1
 label_scale: float = 1
-seq_len = 1030
+seq_len = 64
 val_split: float = 0.1
 label_scale: float = 1
 
 #datasets = load_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
-training_dataset = get_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
+training_dataset = get_dataset_multi('dataset', IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
 print('load dataset shape', training_dataset.element_spec)
 training_dataset = training_dataset.batch(1)
 print('load dataset shape', training_dataset.element_spec)
@@ -287,5 +290,3 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-predictions = mymodel.predict(x=training_dataset)
-print(predictions)
