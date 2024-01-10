@@ -10,6 +10,7 @@ import numpy as np
 from matplotlib.image import imread
 from tqdm import tqdm
 from PIL import Image
+import matplotlib.pyplot as plt
 
 import seaborn as sns
 import pandas as pd
@@ -49,7 +50,7 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
         sfb = sub_feature.batch(seq_len, drop_remainder=True)
         slb = sub_label.batch(seq_len, drop_remainder=True)
         return tf.data.Dataset.zip((sfb, slb))
-        # return sub.batch(seq_len, drop_remainder=True)
+        # return sub.bacleatch(seq_len, drop_remainder=True)
 
     
     datasets = []
@@ -73,7 +74,7 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
         labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
         # n_images = len(os.listdir(os.path.join(root, d))) - 1
         n_images = len([fn for fn in os.listdir('./' + root + "/" + str(directory)) if file_ending in fn])
-        print(n_images)
+        
         print("no of imgs", n_images)
         # dataset_np = np.empty((n_images, 256, 256, 3), dtype=np.uint8)
         dataset_np = np.empty((n_images, *image_size), dtype=np.uint8)
@@ -88,7 +89,8 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
 
         images_dataset = tf.data.Dataset.from_tensor_slices(dataset_np)
         dataset = tf.data.Dataset.zip((images_dataset, labels_dataset))
-        dataset = dataset.window(seq_len, shift=shift, stride=stride, drop_remainder=True).flat_map(sub_to_batch)
+        dataset = dataset.window(seq_len, shift=shift, stride=stride, drop_remainder=True)
+        dataset = dataset.flat_map(sub_to_batch)
         datasets.append(dataset)
 
     return datasets
@@ -124,6 +126,40 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
 
 
 
+
+def visualize_datasets(datasets, num_elements=1):
+    """
+    Visualizes `num_elements` from each dataset in the `datasets` list.
+
+    Parameters:
+    - datasets: a list of tf.data.Dataset returned by `load_dataset_multi`.
+    - num_elements: number of elements to visualize from each dataset.
+    """
+
+    for i, dataset in enumerate(datasets):
+        print(f"Visualizing Dataset {i+1}")
+
+        # Take `num_elements` batches from the dataset
+        for image_batch, label_batch in dataset.take(num_elements):
+            # Convert to numpy if not already in that format
+            image_batch = image_batch.numpy()
+            label_batch = label_batch.numpy()
+
+            # Assume `seq_len` is the first dimension of the batch
+            for j in range(image_batch.shape[0]):
+                plt.figure(figsize=(15, 5))
+
+                # Plot images
+                for k in range(image_batch.shape[1]):
+                    plt.subplot(1, image_batch.shape[1], k+1)
+                    plt.imshow(image_batch[j, k])
+                    plt.axis('off')
+
+                # Print labels
+                print(f"Labels for batch {j+1}: {label_batch[j]}")
+                
+                plt.show()
+
 shift: int = 1
 stride: int = 1
 decay_rate: float = 0.95
@@ -136,8 +172,9 @@ label_scale: float = 1
 seq_len = 64
 
 
-#training_dataset = load_dataset_multi('dataset', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
-training_dataset = get_dataset_multi('dataset', IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
-print('load dataset shape', training_dataset.element_spec)
-training_dataset = training_dataset.batch(1)
-print('load dataset shape', training_dataset.element_spec)
+# training_dataset = load_dataset_multi('dataset', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
+training_dataset_multi = get_dataset_multi('dataset', IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
+# print('load dataset shape', training_dataset)
+# # training_dataset = training_dataset.batch(1)
+# # print('load dataset shape', training_dataset.element_spec)
+# visualize_datasets(training_dataset, num_elements=1)

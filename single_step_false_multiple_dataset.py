@@ -279,7 +279,7 @@ label_scale: float = 1
 #datasets = load_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
 training_dataset = get_dataset_multi('dataset', IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
 print('load dataset shape', training_dataset.element_spec)
-training_dataset = training_dataset.batch(1)
+training_dataset = training_dataset.batch(64)
 print('load dataset shape', training_dataset.element_spec)
 
 epochs: int = 30
