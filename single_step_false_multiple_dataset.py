@@ -256,10 +256,13 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
 
 batch_size = None
 seq_len = 64
-mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, None, batch_size, DEFAULT_NCP_SEED, False, False)
+augmentation_params = None
+single_step = False
+no_norm_layer = False
+mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
 
 decay_rate: float = 0.95
-lr: float = 0.001
+lr: float = 0.00001
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
                                                               decay_rate=decay_rate, staircase=True)
 #Adam optimizer
@@ -279,7 +282,7 @@ label_scale: float = 1
 #datasets = load_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
 training_dataset = get_dataset_multi('dataset', IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
 print('load dataset shape', training_dataset.element_spec)
-training_dataset = training_dataset.batch(64)
+training_dataset = training_dataset.batch(1)
 print('load dataset shape', training_dataset.element_spec)
 
 epochs: int = 30

@@ -253,7 +253,12 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
     return training
 
 batch_size = None
-mymodel = generate_ncp_model(1030, IMAGE_SHAPE, None, batch_size, DEFAULT_NCP_SEED, False, False)
+
+augmentation_params = None
+single_step = False
+no_norm_layer = False
+
+mymodel = generate_ncp_model(1030, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
 
 decay_rate: float = 0.95
 lr: float = 0.001
