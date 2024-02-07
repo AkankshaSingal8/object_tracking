@@ -23,7 +23,6 @@ DROPOUT = 0.1
 DEFAULT_NCP_SEED = 22222
 
 
-
 # Shapes for generate_*_model:
 # if single_step, input is tuple of image input (batch [usually 1], h, w, c), and hiddens (batch, hidden_dim)
 # if not single step, is just sequence of images with shape (batch, seq_len, h, w, c) otherwise
@@ -254,7 +253,7 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
     #return training, validation
     return training
 
-batch_size = None
+batch_size = 64
 seq_len = 64
 augmentation_params = None
 single_step = False
@@ -282,7 +281,7 @@ label_scale: float = 1
 #datasets = load_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
 training_dataset = get_dataset_multi('dataset', IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
 print('load dataset shape', training_dataset.element_spec)
-training_dataset = training_dataset.batch(1)
+training_dataset = training_dataset.batch(64)
 print('load dataset shape', training_dataset.element_spec)
 
 epochs: int = 30
