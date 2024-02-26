@@ -292,4 +292,4 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-model.save('my_model_b64.h5')
+mymodel.save('my_model_b64.h5')
