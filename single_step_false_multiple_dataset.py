@@ -253,7 +253,7 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
     #return training, validation
     return training
 
-batch_size = 64
+batch_size = None
 seq_len = 64
 augmentation_params = None
 single_step = False
@@ -292,3 +292,4 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
+model.save('my_model_b64.h5')
