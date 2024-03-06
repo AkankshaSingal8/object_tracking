@@ -177,8 +177,8 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
     IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
     def sub_to_batch(sub_feature, sub_label):
-        sfb = sub_feature.batch(seq_len, drop_remainder=True)
-        slb = sub_label.batch(seq_len, drop_remainder=True)
+        sfb = sub_feature.batch(seq_len, drop_remainder=False)
+        slb = sub_label.batch(seq_len, drop_remainder=False)
         return tf.data.Dataset.zip((sfb, slb))
         # return sub.batch(seq_len, drop_remainder=True)
 
@@ -188,7 +188,7 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
     #output_means, output_stds = get_output_normalization(root)
 
     
-    for directory in range(1, 11):
+    for directory in range(1, 5):
         csv_file_name = root + "/" + str(directory) + '/data_out.csv'
         labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
         print("labels", labels)
@@ -254,7 +254,7 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
     return training
 
 batch_size = None
-seq_len = 64
+seq_len = 1
 augmentation_params = None
 single_step = False
 no_norm_layer = False
@@ -274,7 +274,7 @@ stride: int = 1
 decay_rate: float = 0.95
 val_split: float = 0.1
 label_scale: float = 1
-seq_len = 64
+seq_len = 1
 val_split: float = 0.1
 label_scale: float = 1
 
@@ -292,4 +292,4 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save('my_model_b64.h5')
+mymodel.save('model_singlestepfalse_b64_seqlen1_1to4.h5')
