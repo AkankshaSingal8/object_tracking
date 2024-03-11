@@ -18,7 +18,7 @@ labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.flo
 preds_file_name = "./predictions.csv" 
 pred_vals = np.genfromtxt(preds_file_name, delimiter=',', skip_header=1, dtype=np.float32)
 
-error = labels - pred_vals
+error = abs(labels - pred_vals)
 fig, axs = plt.subplots(4, 1, figsize=(10, 8), sharex=True)
 
 for i in range(4):
@@ -27,7 +27,7 @@ for i in range(4):
     axs[i].set_ylabel('Error')
     axs[i].grid(True)
 
-axs[3].set_xlabel('Sample Index')
+axs[3].set_xlabel('Sequence Length')
 
 plt.tight_layout()
 plt.show()
