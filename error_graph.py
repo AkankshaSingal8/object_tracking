@@ -31,3 +31,8 @@ axs[3].set_xlabel('Sequence Length')
 
 plt.tight_layout()
 plt.show()
+
+error_df = pd.DataFrame(error)
+
+# Save the DataFrame to a CSV file
+error_df.to_csv("errors_seq64.csv", index=False)
