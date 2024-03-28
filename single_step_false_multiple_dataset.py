@@ -188,7 +188,7 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
     #output_means, output_stds = get_output_normalization(root)
 
     
-    for directory in range(1, 5):
+    for directory in range(1, 11):
         csv_file_name = root + "/" + str(directory) + '/data_out.csv'
         labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
         print("labels", labels)
@@ -284,7 +284,7 @@ print('load dataset shape', training_dataset.element_spec)
 training_dataset = training_dataset.batch(64)
 print('load dataset shape', training_dataset.element_spec)
 
-epochs: int = 30
+epochs: int = 50
 callbacks = None
 #setting validation data to None
 history = mymodel.fit(x=training_dataset, validation_data=None, epochs=epochs,verbose=1)
@@ -292,4 +292,4 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save('model_singlestepfalse_b64_seqlen1_1to4.h5')
+mymodel.save('model_ssfalse_b64_seqlen64.h5')
