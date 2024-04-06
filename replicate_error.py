@@ -18,7 +18,7 @@ with tf.device('/cpu:0'):
     model = tf.keras.models.load_model('model_ssfalse_b64_lr0.00001_seqlen64_new_dataset.h5')
 root = "./dataset/1"
 image_paths = [path for path in sorted(os.listdir(root)) if 'png' in path]
-print(image_paths)
+# print(image_paths)
 file_ending = 'png'
 
 csv_file_name = "dataset/1/data_out.csv" 
@@ -45,7 +45,7 @@ for i in range(len(image_paths)):
         last_seq = image_sequences[-1]
         new_seq = np.append(last_seq[0][1:], [current_img_array], axis=0)
         new_seq = np.expand_dims(new_seq, axis=0) 
-        print(new_seq.shape)
+        # print(new_seq.shape)
         image_sequences.append(new_seq)
 
 # Convert the list of sequences into a numpy array for easier handling
@@ -60,7 +60,7 @@ for seq in image_sequences_array:
         preds.append(model.predict(seq))
         end= time.time()
         times.append(end - start)
-        #print(preds)
+        print(end - start)
     predictions.append(preds[0][0][63])
 
 
