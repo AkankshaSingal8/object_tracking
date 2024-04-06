@@ -13,7 +13,7 @@ import time
 import matplotlib.pyplot as plt
 
 csv_file_name = "dataset/1/data_out.csv" 
-labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)[:64]
+labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
 
 preds_file_name = "./predictions_sliding_window_updated.csv" 
 pred_vals = np.genfromtxt(preds_file_name, delimiter=',', skip_header=1, dtype=np.float32)
