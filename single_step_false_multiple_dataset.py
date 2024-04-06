@@ -188,7 +188,7 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
     #output_means, output_stds = get_output_normalization(root)
 
     
-    for directory in range(1, 11):
+    for directory in range(1, 12):
         csv_file_name = root + "/" + str(directory) + '/data_out.csv'
         labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
         print("labels", labels)
@@ -261,7 +261,7 @@ no_norm_layer = False
 mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
 
 decay_rate: float = 0.95
-lr: float = 0.01
+lr: float = 0.00001
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
                                                               decay_rate=decay_rate, staircase=True)
 #Adam optimizer
@@ -292,4 +292,4 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save('model_ssfalse_b64_lr0.01_seqlen64_updated_dataset.h5')
+mymodel.save('model_ssfalse_b64_lr0.01_seqlen64_new_dataset.h5')
