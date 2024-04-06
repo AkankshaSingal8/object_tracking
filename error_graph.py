@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 csv_file_name = "dataset/1/data_out.csv" 
 labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
 
-preds_file_name = "./predictions_sliding_window_updated_11.csv" 
+preds_file_name = "./predictions_sliding_window_added_0s.csv" 
 pred_vals = np.genfromtxt(preds_file_name, delimiter=',', skip_header=1, dtype=np.float32)
 
 error = labels - pred_vals
@@ -35,4 +35,4 @@ plt.show()
 error_df = pd.DataFrame(error)
 
 # Save the DataFrame to a CSV file
-error_df.to_csv("errors_sliding_window_updated_11.csv", index=False)
+error_df.to_csv("errors_sliding_window_added_0s.csv", index=False)
