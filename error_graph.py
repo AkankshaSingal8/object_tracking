@@ -12,12 +12,13 @@ import pandas as pd
 import time
 import matplotlib.pyplot as plt
 
-csv_file_name = "dataset/1/data_out.csv" 
+csv_file_name = "./1/data_out.csv" 
 labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
 
 preds_file_name = "./predictions_sliding_window_added_0s_scheduler.csv" 
-pred_vals = np.genfromtxt(preds_file_name, delimiter=',', skip_header=1, dtype=np.float32)
+pred_vals = np.genfromtxt(preds_file_name, delimiter=',', skip_header=1, dtype=np.float32)[:593]
 
+print(len(labels), len(pred_vals))
 error = labels - pred_vals
 fig, axs = plt.subplots(4, 1, figsize=(10, 8), sharex=True)
 
@@ -34,5 +35,5 @@ plt.show()
 
 error_df = pd.DataFrame(error)
 
-# Save the DataFrame to a CSV file
-error_df.to_csv("errors_sliding_window_added_0s_scheduler.csv", index=False)
+# # Save the DataFrame to a CSV file
+# error_df.to_csv("errors_sliding_window_added_0s_scheduler.csv", index=False)
