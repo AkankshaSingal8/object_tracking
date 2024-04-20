@@ -16,9 +16,9 @@ IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
 tf.config.set_visible_devices([], 'GPU')
 
-
+file_name = 'model-ncp_seq-64_lr-0.000291_epoch-096_val-loss\:0.0720_train-loss\:0.0104_mse\:0.0104_2022\:04\:15\:05\:11\:37.hdf5'
 with tf.device('/cpu:0'):
-    model = tf.keras.models.load_model('model_ssfalse_b64_lr0.0001wscheduler_seqlen64_new_dataset.h5')
+    model = tf.keras.models.load_model(file_name)
 root = "./dataset/1"
 image_paths = [path for path in sorted(os.listdir(root)) if 'png' in path][:593]
 # print(image_paths)
@@ -73,4 +73,4 @@ print("Avg Time: ", sum(times) / len(times))
 predictions_df = pd.DataFrame(predictions)
 
 # Save the DataFrame to a CSV file
-predictions_df.to_csv("predictions_my_system.csv", index=False)
+predictions_df.to_csv("predictions_pretrained_model.csv", index=False)
