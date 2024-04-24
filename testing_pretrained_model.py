@@ -37,7 +37,7 @@ model = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size
 model.load_weights('model-ncp-val.hdf5')
 # predictions = model.predict(images)
 
-root = "./dataset/12"
+root = "./dataset/1"
 image_paths = [path for path in sorted(os.listdir(root)) if 'png' in path]
 
 predictions = []
@@ -85,4 +85,4 @@ print(len(predictions))
 predictions_df = pd.DataFrame(predictions)
 
 # Save the DataFrame to a CSV file
-predictions_df.to_csv("predictions_pretrained_model.csv", index=False)
+predictions_df.to_csv("predictions_pretrained_model_data1.csv", index=False)
