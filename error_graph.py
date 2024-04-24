@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import cv2 as cv
 
 for directory in range(1, 13):
-    csv_file_name = f'dataset/{directory}/data_out.csv'
+    csv_file_name = f'original_dataset/{directory}/data_out.csv'
     labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
 
     preds_file_name = f'CUSTOM_MODEL/predictions_test_data{directory}.csv'
