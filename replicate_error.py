@@ -18,7 +18,7 @@ with tf.device('/cpu:0'):
     model = tf.keras.models.load_model('model_ssfalse_b64_lr0.0001wscheduler_seqlen64_new_dataset.h5')
 
 for directory in range(1, 13):
-    root = f"./dataset/{directory}"
+    root = f"./original_dataset/{directory}"
     image_paths = [path for path in sorted(os.listdir(root)) if 'png' in path]
     # print(image_paths)
     file_ending = 'png'
