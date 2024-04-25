@@ -15,7 +15,7 @@ IMAGE_SHAPE = (144, 256, 3)
 IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
 with tf.device('/cpu:0'):
-    model = tf.keras.models.load_model('model_ssfalse_b64_lr0.0001wscheduler_seqlen64_new_dataset.h5')
+    model = tf.keras.models.load_model('model_fine_tuned.h5')
 
 for directory in range(1, 13):
     root = f"./original_dataset/{directory}"
@@ -71,4 +71,4 @@ for directory in range(1, 13):
     predictions_df = pd.DataFrame(predictions)
 
     # Save the DataFrame to a CSV file
-    predictions_df.to_csv(f"CUSTOM_MODEL/predictions_test_data{directory}.csv", index=False)
+    predictions_df.to_csv(f"FINE_TUNED/predictions_test_data{directory}.csv", index=False)
