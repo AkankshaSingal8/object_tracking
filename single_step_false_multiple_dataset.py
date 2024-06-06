@@ -265,8 +265,8 @@ lr: float = 0.0001
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
                                                             decay_rate=decay_rate, staircase=True)
 #Adam optimizer
-# optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
-optimizer = keras.optimizers.Adam(learning_rate=lr)
+optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
+
 mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
 mymodel.summary()
 

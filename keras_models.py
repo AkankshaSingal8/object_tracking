@@ -4,7 +4,7 @@ from typing import Iterable, Dict
 import kerasncp as kncp
 from kerasncp.tf import LTCCell, WiredCfcCell
 from tensorflow import keras
-
+import tensorflow as tf
 # from node_cell import *
 # from tf_cfc import CfcCell, MixedCfcCell
 # from tf_cfc import LTCCell as CFCLTCCell
