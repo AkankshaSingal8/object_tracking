@@ -17,7 +17,7 @@ for directory in range(1, 13):
     csv_file_name = f'original_dataset/{directory}/data_out.csv'
     labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
 
-    preds_file_name = f'CUSTOM_MODEL/predictions_test_data{directory}.csv'
+    preds_file_name = f'FINE_TUNED/predictions_test_data{directory}.csv'
     pred_vals = np.genfromtxt(preds_file_name, delimiter=',', skip_header=1, dtype=np.float32)[:len(labels)]
 
     print(len(labels), len(pred_vals))
@@ -38,4 +38,4 @@ for directory in range(1, 13):
     error_df = pd.DataFrame(error)
 
     # # Save the DataFrame to a CSV file
-    error_df.to_csv(f'CUSTOM_MODEL/errors_test_data{directory}.csv', index=False)
+    error_df.to_csv(f'FINE_TUNED/errors_test_data{directory}.csv', index=False)
