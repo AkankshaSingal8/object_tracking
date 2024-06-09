@@ -138,12 +138,12 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
     return training
 
 decay_rate: float = 0.95
-lr: float = 0.0001
+lr: float = 0.01
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
                                                             decay_rate=decay_rate, staircase=True)
 #Adam optimizer
-# optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
-optimizer = keras.optimizers.Adam(learning_rate=lr)
+optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
+
 mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
 mymodel.summary()
 
@@ -170,4 +170,19 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save('model_fine_tuned.h5')
+mymodel.save('fine_tuned_wscheduler_lr0.01.h5')
+
+import matplotlib.pyplot as plt
+
+# Plotting
+plt.plot(history.history['loss'], label='Training loss')
+plt.title('Training Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+plt.savefig('fine_tune_train_loss.png')  # Specify your path here
+
+# Close the figure
+plt.close()
+

@@ -4,12 +4,14 @@ import json
 import os.path
 from enum import Enum
 from typing import Dict, Tuple, Union, Optional, Any
-
+import tensorflow as tf
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from PIL import Image
 from typing import List, Iterable, Optional, Union
-
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-
+import os
 # physical_devices = tf.config.list_physical_devices('GPU')
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
 from numpy import ndarray
@@ -17,7 +19,7 @@ from tensorflow import keras, Tensor
 from tensorflow.keras.layers import Conv2D
 from tensorflow.python.keras.models import Functional
 from keras_models import generate_ncp_model
-from vis_utils import run_visualization, write_video
+# from vis_utils import run_visualization, write_video
 
 IMAGE_SHAPE = (144, 256, 3)
 IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
@@ -31,7 +33,11 @@ single_step = True
 no_norm_layer = False
 mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
 
-mymodel.load_weights('model-ncp-val.hdf5')
+# pretrained model weights
+# mymodel.load_weights('model-ncp-val.hdf5')
+
+# custom model weights
+mymodel.load_weights('ncp_model_b64_seq64_lr0.001.h5')
 
 conv_layers = [layer for layer in mymodel.layers if isinstance(layer, Conv2D)]
 
@@ -88,17 +94,66 @@ def compute_visualbackprop(img: Union[Tensor, ndarray],
     saliency_mask = tf.squeeze(saliency_mask, axis=0)  # remove batch dimension
     return (saliency_mask, hiddens, None) if hiddens else saliency_mask
 
+def load_image(image_path):
+    img = Image.open(image_path)
+    img = img.resize(IMAGE_SHAPE_CV)
+    img_array = np.array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = tf.convert_to_tensor(img_array)
+    return img_array
 
-vis_func = compute_visualbackprop
-run_visualization(
-                vis_model=vis_model,
-                data=data_path,
-                vis_func=vis_func,
-                image_output_path= output_name+"/"+data_model_id,
-                video_output_path=os.path.join(output_name, f"{data_model_id}.mp4"),
-                reverse_channels=reverse_channels,
-                control_source=csv_path if csv_path else control_model,
-                vis_kwargs=vis_kwargs,
-                absolute_norm=absolute_norm,
-            )
-print(f"Finished {data_model_id}")
+def plot_saliency_map(saliency_map, image_size, root, file_path, title='Saliency Map'):
+    # Normalize the saliency map for better visualization
+    saliency_map = (saliency_map - tf.reduce_min(saliency_map)) / (tf.reduce_max(saliency_map) - tf.reduce_min(saliency_map) + 1e-6)
+    
+    # Convert the saliency map to a numpy array if it's not already
+    saliency_map = saliency_map.numpy() if isinstance(saliency_map, tf.Tensor) else saliency_map
+    
+    # Resize the saliency map to match the original image size if necessary
+    if saliency_map.shape[:2] != image_size:
+        saliency_map = tf.image.resize(saliency_map, image_size)
+        saliency_map = saliency_map.numpy()  # Convert to numpy array
+    
+    
+    # Plotting
+    plt.figure(figsize=(10, 5))
+    plt.imshow(saliency_map, cmap='hot')
+    plt.colorbar()  # Adds a colorbar to interpret values
+    plt.title(title)
+    plt.axis('off')  # Hide the axis
+    # plt.show()
+    plt.savefig(os.path.join(root, file_path))
+    plt.close()
+    print("Saved", file_path)
+
+root_directory = './original_dataset/1'
+saliency_directory = './saliency_maps/1'
+sorted_files = os.listdir(root_directory)
+
+for i in range (len(sorted_files) - 1):
+    file = 'Image'+str(i + 1)+'.png'
+    print("Processing", file)
+    file_path = os.path.join(root_directory, file)
+    img = load_image(file_path)
+    saliency_map = compute_visualbackprop(img, vis_model)
+    plot_saliency_map(saliency_map, (224, 224), saliency_directory, file)
+        
+
+# img = load_image('./Image01.png')
+# saliency_map = compute_visualbackprop(img, vis_model)
+# print(saliency_map.shape)
+
+
+
+# run_visualization(
+#                 vis_model=vis_model,
+#                 data=data_path,
+#                 vis_func=vis_func,
+#                 image_output_path= output_name+"/"+data_model_id,
+#                 video_output_path=os.path.join(output_name, f"{data_model_id}.mp4"),
+#                 reverse_channels=reverse_channels,
+#                 control_source=csv_path if csv_path else control_model,
+#                 vis_kwargs=vis_kwargs,
+#                 absolute_norm=absolute_norm,
+#             )
+# print(f"Finished {data_model_id}")

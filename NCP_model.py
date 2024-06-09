@@ -36,7 +36,7 @@ single_step = False
 no_norm_layer = False
 mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
 decay_rate: float = 0.95
-lr: float = 0.001
+lr: float = 0.01
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
                                                             decay_rate=decay_rate, staircase=True)
 #Adam optimizer
@@ -168,4 +168,18 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save('ncp_model_b64_seq64_lr0.001.h5')
+mymodel.save('ncp_model_b64_seq64_lr0.01.h5')
+
+import matplotlib.pyplot as plt
+
+# Plotting
+plt.plot(history.history['loss'], label='Training loss')
+plt.title('Training Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+# plt.savefig('ncp_model_b64_seq64_lr0.01_train_loss.png')  # Specify your path here
+
+# Close the figure
+plt.close()
