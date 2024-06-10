@@ -1,53 +1,38 @@
-import json
-import os
-from pathlib import Path
-from typing import Optional, Callable, Sequence, Union, Dict, Any, Iterable
-
 import cv2
-import numpy as np
-import pandas as pd
-from PIL import Image
-from numpy import ndarray
-from pandas import DataFrame
-from tensorflow import Tensor
-from tensorflow.python.keras.models import Functional
-from tqdm import tqdm
+import os
 
-def write_video(img_seq: Sequence[ndarray], output_path: str, fps: int = 10):
-    Path(os.path.dirname(output_path)).mkdir(exist_ok=True, parents=True)
-    seq_shapes = [img.shape for img in img_seq]
-    assert seq_shapes.count(seq_shapes[0]) == len(seq_shapes), "Not all shapes in img_seq are the same"
+'''Kaggle code'''
 
-    image_shape = img_seq[0].shape
-    cv_shape = (image_shape[1], image_shape[0])  # videowriter takes width, height, image_shape is height, width
-    writer = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), fps, cv_shape,
-                             True)  # true means write color frames
+def convert_images_to_video(input_folder, output_file, fps):
+    # Get the list of image files in the input folder
+    image_files = []
 
-    for img in img_seq:
-        writer.write(img)
+    for i in range (len(os.listdir(input_folder)) - 1):
+        file_name = 'Image'+str(i + 1)+'.png'
+        image_files.append(file_name)
 
-    writer.release()
-    
+    # Read the first image to get its dimensions
+    first_image = cv2.imread(os.path.join(input_folder, image_files[0]))
+    height, width, _ = first_image.shape
 
-def load_image(image_path, target_size):
-    img = Image.open(image_path)
-    img = img.resize(target_size)
-    img_array = np.array(img)
-    return img_array
+    # Create a VideoWriter object to save the video
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Specify the codec for the output video file
+    video = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
 
-def image_array(root_directory, output_path):
-    images = []
-    
-    for i in range (len(os.listdir(root_directory)) - 1):
-        file = 'Image'+str(i + 1)+'.png'
-        print("Processing", file)
-        file_path = os.path.join(root_directory, file)
-        img = load_image(file_path, (224, 224))
-        images.append(img)
-    return images
+    # Iterate over each image and write it to the video
+    for image_file in image_files:
+        image_path = os.path.join(input_folder, image_file)
+        frame = cv2.imread(image_path)
+        video.write(frame)
 
+    # Release the video writer and close the video file
+    video.release()
+    cv2.destroyAllWindows()
 
-root = './saliency_maps/1'
-output_path = './saliency_maps/saliency_traj1.mp4'
-images = image_array(root, output_path)
-write_video(images, output_path)
+# Provide the path to the input image folder, output video file, and desired FPS
+input_folder = r'./drive/MyDrive/1'
+output_file = r'saliency_trajectory1.mp4'
+fps = 10  # Frames per second
+
+# Call the function to convert the images to video
+convert_images_to_video(input_folder, output_file, fps)
