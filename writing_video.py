@@ -30,9 +30,11 @@ def convert_images_to_video(input_folder, output_file, fps):
     cv2.destroyAllWindows()
 
 # Provide the path to the input image folder, output video file, and desired FPS
-input_folder = r'./drive/MyDrive/1'
-output_file = r'saliency_trajectory1.mp4'
-fps = 10  # Frames per second
+for i in range(2, 13):
+    input_folder = './saliency_maps/' + str(i)
+    output_file = f'./saliency_maps/saliency_trajectory{i}.mp4'
+    fps = 10  # Frames per second
 
-# Call the function to convert the images to video
-convert_images_to_video(input_folder, output_file, fps)
+    # Call the function to convert the images to video
+    convert_images_to_video(input_folder, output_file, fps)
+    print("Saved file:", output_file)
