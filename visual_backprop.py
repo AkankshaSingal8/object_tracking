@@ -126,17 +126,20 @@ def plot_saliency_map(saliency_map, image_size, root, file_path, title='Saliency
     plt.close()
     print("Saved", file_path)
 
-root_directory = './original_dataset/1'
-saliency_directory = './saliency_maps/1'
-sorted_files = os.listdir(root_directory)
+for index in range(3, 13):
+    root_directory = './original_dataset/' + str(index)
+    saliency_directory = './saliency_maps/' + str(index)
+    if not os.path.exists(saliency_directory):
+        os.makedirs(saliency_directory, exist_ok=True)
+    sorted_files = os.listdir(root_directory)
 
-for i in range (len(sorted_files) - 1):
-    file = 'Image'+str(i + 1)+'.png'
-    print("Processing", file)
-    file_path = os.path.join(root_directory, file)
-    img = load_image(file_path)
-    saliency_map = compute_visualbackprop(img, vis_model)
-    plot_saliency_map(saliency_map, (224, 224), saliency_directory, file)
+    for i in range (len(sorted_files) - 2):
+        file = 'Image'+str(i + 1)+'.png'
+        print("Processing", file)
+        file_path = os.path.join(root_directory, file)
+        img = load_image(file_path)
+        saliency_map = compute_visualbackprop(img, vis_model)
+        plot_saliency_map(saliency_map, (224, 224), saliency_directory, file)
         
 
 # img = load_image('./Image01.png')
