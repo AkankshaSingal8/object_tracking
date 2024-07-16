@@ -42,3 +42,6 @@ def load_image(image_path):
     img_array = tf.convert_to_tensor(img_array)
     return img_array
 
+img = load_image("000000.png")
+output = mymodel.predict(img)
+print(output)
