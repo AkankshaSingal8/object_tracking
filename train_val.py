@@ -177,7 +177,8 @@ def load_val_dataset_multi(root, image_size, seq_len, shift, stride, label_scale
     
         labels_dataset = tf.data.Dataset.from_tensor_slices(labels)
         # n_images = len(os.listdir(os.path.join(root, d))) - 1
-        n_images = len([fn for fn in os.listdir('./' + root + "/" + str(directory)) if file_ending in fn])
+        base_name = f"{root}/{directory}_Test"
+        n_images = len([fn for fn in os.listdir(base_name ) if file_ending in fn])
         print(n_images)
         print("no of imgs", n_images)
         # dataset_np = np.empty((n_images, 256, 256, 3), dtype=np.uint8)
@@ -251,6 +252,7 @@ print('load val dataset shape', training_dataset.element_spec)
 
 epochs: int = 100
 callbacks = None
+
 #setting validation data to None
 history = mymodel.fit(x=training_dataset, validation_data=val_dataset, epochs=epochs,verbose=1)
 print(history)
