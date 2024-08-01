@@ -54,6 +54,8 @@ def generate_hidden_list(model: Functional, return_numpy: bool = True):
         hiddens.append(constructor(hidden))
     return hiddens
 
+
+
 IMAGE_SHAPE = (144, 256, 3)
 IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
@@ -69,7 +71,33 @@ mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_si
 mymodel.load_weights('model_fine_tuned.h5')
 hiddens = generate_hidden_list(model=mymodel, return_numpy=True)
 print(hiddens)
+hiddens = [0,0,0,0]
+print("Model loaded")
 
-# out = mymodel.predict([im_network, *self.hiddens])
-# vel_cmd = out[0]  # shape: 1 x 4
-# hiddens = out[1:] 
+for directory in range(1, 13):
+    root = f"./original_dataset/{directory}"
+    image_paths = [path for path in sorted(os.listdir(root)) if 'png' in path]
+    # print(image_paths)
+    file_ending = 'png'
+
+    predictions = []
+
+    times = []
+    for i in range(len(image_paths)):
+        current_image_path = os.path.join(root, image_paths[i])
+        current_img = Image.open(current_image_path).resize(IMAGE_SHAPE_CV)
+        current_img_array = np.array(current_img)
+        im_network = np.expand_dims(current_img_array, 0)
+        hiddens = np.expand_dims(hiddens, 0)
+        print(hiddens.shape)
+        start = time.time()
+        out = mymodel.predict([im_network, *hiddens])
+        end= time.time()
+        times.append(end - start)
+        vel_cmd = out[0]  # shape: 1 x 4
+        hiddens = out[1:] 
+        predictions.append(vel_cmd)
+    
+    print("Avg Time: ", sum(times) / len(times))
+    print(len(predictions))
+    predictions_df = pd.DataFrame(predictions)

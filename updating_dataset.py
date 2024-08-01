@@ -11,12 +11,15 @@ from PIL import Image
 import seaborn as sns
 import pandas as pd
 
-root = "dataset"
+root = "../fly_to_target_dataset/dataset"
 file_ending = 'png'
+file_name = "data_out.csv"
 
-for directory in range(1, 12):
-    #print("directory", directory)
-    csv_file_name = root + "/" + str(directory) + '/data_out.csv'
+for i in range(len(os.listdir(root))):
+    directory = i + 1
+    print("Processing directory", directory)
+
+    csv_file_name = f"{root}/{str(directory)}/{file_name}"
     labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
     #print("labels len", labels.shape)
     d = labels.shape[0]%64
@@ -25,12 +28,13 @@ for directory in range(1, 12):
     else:
         diff_labels = 64 - d
  
-    print("labels", labels[-1])
+    # print("labels", labels[-1])
+    velocity_values = [0.0, 0.0, 0.0, 0.0]
     
     with open(csv_file_name, 'a', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         for i in range(diff_labels):
-            csvwriter.writerow(labels[-1])
+            csvwriter.writerow(velocity_values)
    
 
    

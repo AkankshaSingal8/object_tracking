@@ -31,7 +31,12 @@ IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
 batch_size = None
 seq_len = 64
-augmentation_params = None
+translation_factor = 0.1
+rotation_factor = 0.1
+zoom_factor = 0.1
+augmentation_params = {"translation_factor": translation_factor, "rotation_factor": rotation_factor,
+                           "zoom_factor": zoom_factor}
+# augmentation_params = None
 single_step = False
 no_norm_layer = False
 mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
@@ -236,7 +241,7 @@ label_scale: float = 1
 seq_len = 64
 val_split: float = 0.1
 label_scale: float = 1
-
+training_root = "dataset"
 #datasets = load_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
 training_dataset = get_dataset_multi('dataset', IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
 print('load dataset shape', training_dataset.element_spec)

@@ -3,11 +3,11 @@ import pandas as pd
 import os
 
 # Directory containing the datasets
-dataset_directory = './original_dataset' 
+dataset_directory = '../fly_to_target_dataset/test_data' 
 
 # Iterate through directories numbered 1 to 10
-for i in range(1, 13):
-    directory = os.path.join(dataset_directory, str(i))
+for i in range(len(os.listdir(dataset_directory))):
+    directory = os.path.join(dataset_directory, str(i + 1))
     
     # Check if the directory exists
     if os.path.exists(directory):
