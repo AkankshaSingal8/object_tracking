@@ -69,7 +69,7 @@ single_step = True
 single_step_model = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
 
 with tf.device('/cpu:0'):
-    single_step_model.load_weights('model_fine_tuned.h5')
+    single_step_model.load_weights('saved_models/fine_tuned_wscheduler_lr0.01_new_data.h5')
 print("Model loaded")
 
 hiddens = generate_hidden_list(model= single_step_model, return_numpy=True)
@@ -77,71 +77,71 @@ print("hiddens shape: ", hiddens[0].shape)
 
 train_root = "../fly_to_target_dataset/original_dataset"
 test_root = "../fly_to_target_dataset/test_data"
-output_directory = "SINGLE_STEP_FINE_TUNED"
+output_directory = "SINGLE_STEP_FINE_TUNED_NEW_DATA"
 file_ending = 'png'
 
 train_inference_time = []
 test_inference_time = []
 
-# for directory in range(len(os.listdir(train_root))):
-#     predictions = []
-#     times = []
-#     directory_path = f"{train_root}/{directory + 1}"
-#     print("Processing directory : ", directory_path)
-#     n_images = [path for path in os.listdir(directory_path) if file_ending in path]
-#     print("Number of images :", len(n_images))
-#     for i in range(len(n_images)):
-#         current_image_path = f"{directory_path}/Image{i + 1}.png"
-#         current_img = Image.open(current_image_path).resize(IMAGE_SHAPE_CV)
-#         current_img_array = np.array(current_img)
-#         im_network = np.expand_dims(current_img_array, 0)
-#         start = time.time()
-#         output = single_step_model.predict([im_network, *hiddens])
-#         end= time.time()
-#         times.append(end - start)
-#         # print(end - start)
-#         predictions.append(list(output[0][0].tolist()))
-#         hiddens = output[1:]
-#     print("Avg Time: ", sum(times) / len(times))
-#     train_inference_time.append(sum(times) / len(times))
-#     # print(len(predictions))
-#     # print(predictions)
-#     predictions_df = pd.DataFrame(predictions)
+for directory in range(len(os.listdir(train_root))):
+    predictions = []
+    times = []
+    directory_path = f"{train_root}/{directory + 1}"
+    print("Processing directory : ", directory_path)
+    n_images = [path for path in os.listdir(directory_path) if file_ending in path]
+    print("Number of images :", len(n_images))
+    for i in range(len(n_images)):
+        current_image_path = f"{directory_path}/Image{i + 1}.png"
+        current_img = Image.open(current_image_path).resize(IMAGE_SHAPE_CV)
+        current_img_array = np.array(current_img)
+        im_network = np.expand_dims(current_img_array, 0)
+        start = time.time()
+        output = single_step_model.predict([im_network, *hiddens])
+        end= time.time()
+        times.append(end - start)
+        # print(end - start)
+        predictions.append(list(output[0][0].tolist()))
+        hiddens = output[1:]
+    print("Avg Time: ", sum(times) / len(times))
+    train_inference_time.append(sum(times) / len(times))
+    # print(len(predictions))
+    # print(predictions)
+    predictions_df = pd.DataFrame(predictions)
 
 
-#     # Save the DataFrame to a CSV file
-#     predictions_df.to_csv(f"{output_directory}/predictions_train_data{directory + 1}.csv", index=False)
-#     print("Predictions saved to file: ", directory + 1)
+    # Save the DataFrame to a CSV file
+    predictions_df.to_csv(f"{output_directory}/predictions_train_data{directory + 1}.csv", index=False)
+    print("Predictions saved to file: ", directory + 1)
 
-# for directory in range(len(os.listdir(test_root))):
-#     predictions = []
-#     times = []
-#     directory_path = f"{test_root}/{directory + 1}"
-#     print("Processing directory : ", directory_path)
-#     n_images = [path for path in os.listdir(directory_path) if file_ending in path]
-#     print("Number of images :", len(n_images))
-#     for i in range(len(n_images)):
-#         current_image_path = f"{directory_path}/Image{i + 1}.png"
-#         current_img = Image.open(current_image_path).resize(IMAGE_SHAPE_CV)
-#         current_img_array = np.array(current_img)
-#         im_network = np.expand_dims(current_img_array, 0)
-#         start = time.time()
-#         output = single_step_model.predict([im_network, *hiddens])
-#         end= time.time()
-#         times.append(end - start)
-#         # print(end - start)
-#         predictions.append(list(output[0][0].tolist()))
-#         hiddens = output[1:]
-#     print("Avg Time: ", sum(times) / len(times))
-#     test_inference_time.append(sum(times) / len(times))
-#     # print(len(predictions))
-#     # print(predictions)
-#     predictions_df = pd.DataFrame(predictions)
+for directory in range(len(os.listdir(test_root))):
+    predictions = []
+    times = []
+    directory_path = f"{test_root}/{directory + 1}"
+    print("Processing directory : ", directory_path)
+    n_images = [path for path in os.listdir(directory_path) if file_ending in path]
+    print("Number of images :", len(n_images))
+    for i in range(len(n_images)):
+        current_image_path = f"{directory_path}/Image{i + 1}.png"
+        current_img = Image.open(current_image_path).resize(IMAGE_SHAPE_CV)
+        current_img_array = np.array(current_img)
+        im_network = np.expand_dims(current_img_array, 0)
+        start = time.time()
+        output = single_step_model.predict([im_network, *hiddens])
+        end= time.time()
+        times.append(end - start)
+        # print(end - start)
+        predictions.append(list(output[0][0].tolist()))
+        hiddens = output[1:]
+    print("Avg Time: ", sum(times) / len(times))
+    test_inference_time.append(sum(times) / len(times))
+    # print(len(predictions))
+    # print(predictions)
+    predictions_df = pd.DataFrame(predictions)
 
 
-#     # Save the DataFrame to a CSV file
-#     predictions_df.to_csv(f"{output_directory}/predictions_test_data{directory + 1}.csv", index=False)
-#     print("Predictions saved to file: ", directory + 1)
+    # Save the DataFrame to a CSV file
+    predictions_df.to_csv(f"{output_directory}/predictions_test_data{directory + 1}.csv", index=False)
+    print("Predictions saved to file: ", directory + 1)
 
 for directory in range(len(os.listdir(test_root))):
     print("Processing directory : ", directory + 1)
