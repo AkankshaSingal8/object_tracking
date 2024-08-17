@@ -77,6 +77,16 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
         slb = sub_label.batch(seq_len, drop_remainder=True)
         return tf.data.Dataset.zip((sfb, slb))
         # return sub.batch(seq_len, drop_remainder=True)
+    
+    def apply_random_augmentations(image):
+        # Generate a random number and apply augmentations with a 50% probability
+        if tf.random.uniform(()) > 0.3:  # 30% chance to apply augmentations
+            image = tf.image.convert_image_dtype(image, tf.float32)  # Convert to float32 for augmentation
+            image = tf.image.random_brightness(image, max_delta=0.1)  # Random brightness adjustment
+            image = tf.image.random_contrast(image, lower=0.8, upper=1.2)  # Random contrast adjustment
+            image = tf.image.random_saturation(image, lower=0.8, upper=1.2)  # Random saturation adjustment
+            image = tf.image.convert_image_dtype(image, tf.uint8)  # Convert back to uint8
+        return image
 
     
     datasets = []
@@ -115,6 +125,7 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
             dataset_np[ix] = img
 
         images_dataset = tf.data.Dataset.from_tensor_slices(dataset_np)
+        images_dataset = images_dataset.map(apply_random_augmentations, num_parallel_calls=tf.data.experimental.AUTOTUNE)
         dataset = tf.data.Dataset.zip((images_dataset, labels_dataset))
         dataset = dataset.window(seq_len, shift=shift, stride=stride, drop_remainder=True).flat_map(sub_to_batch)
         datasets.append(dataset)
@@ -264,7 +275,7 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save('saved_models/fine_tuned_w/0scheduler_lr0.0001_new_data.h5')
+mymodel.save('saved_models/fine_tuned_woscheduler_lr0.0001_aug_data.h5')
 
 
 

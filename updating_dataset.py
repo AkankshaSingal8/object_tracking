@@ -21,21 +21,21 @@ for i in range(len(os.listdir(root))):
 
     csv_file_name = f"{root}/{str(directory)}/{file_name}"
     labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)
-    diff = int((30 * len(labels))/100)
-    print("diff_labels", diff)
-    #print("labels len", labels.shape)
-    # d = labels.shape[0]%64
-    # if d == 0:
-    #     diff_labels = 0
-    # else:
-    #     diff_labels = 64 - d
+    # diff = int((30 * len(labels))/100)
+    # print("diff_labels", diff)
+    print("labels len", labels.shape)
+    d = labels.shape[0]%64
+    if d == 0:
+        diff_labels = 0
+    else:
+        diff_labels = 64 - d
  
     # print("labels", labels[-1])
     velocity_values = [0.0, 0.0, 0.0, 0.0]
     
     with open(csv_file_name, 'a', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
-        for i in range(diff):
+        for i in range(diff_labels):
             csvwriter.writerow(velocity_values)
    
 
@@ -43,13 +43,13 @@ for i in range(len(os.listdir(root))):
     n_images = len([fn for fn in os.listdir(f"./{root}/{str(directory)}") if file_ending in fn])
     print("Number of images:", n_images)
   
-    # d_img = n_images % 64
+    d_img = n_images % 64
     
-    # if d_img == 0:
-    #     diff = 0
-    # else:
-    #     diff = 64 - d_img
-    # print("diff_labels", diff_labels, " diff", diff, " diff_labels%64", (labels.shape[0] + diff_labels)%64, " diff%64", (n_images + diff)%64)
+    if d_img == 0:
+        diff = 0
+    else:
+        diff = 64 - d_img
+    print("diff_labels", diff_labels, " diff", diff, " diff_labels%64", (labels.shape[0] + diff_labels)%64, " diff%64", (n_images + diff)%64)
     
     img_file_name = root + "/" + str(directory) +'/Image' + str(n_images) + '.'+ file_ending
     img = Image.open(img_file_name)
