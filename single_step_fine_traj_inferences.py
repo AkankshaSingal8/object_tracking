@@ -69,7 +69,7 @@ single_step = True
 single_step_model = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
 
 with tf.device('/cpu:0'):
-    single_step_model.load_weights('saved_models/fine_tuned_wscheduler_lr0.01_new_data.h5')
+    single_step_model.load_weights('saved_models/fine_tuned_woscheduler_lr0.0001_aug_data.h5')
 print("Model loaded")
 
 hiddens = generate_hidden_list(model= single_step_model, return_numpy=True)
@@ -77,7 +77,7 @@ print("hiddens shape: ", hiddens[0].shape)
 
 train_root = "../fly_to_target_dataset/original_dataset"
 test_root = "../fly_to_target_dataset/test_data"
-output_directory = "SINGLE_STEP_FINE_TUNED_NEW_DATA"
+output_directory = "SINGLE_STEP_FINE_TUNED_AUG_DATA"
 file_ending = 'png'
 
 train_inference_time = []
