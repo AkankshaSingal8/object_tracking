@@ -22,7 +22,7 @@ import time
 from keras_models import generate_ncp_model
 DROPOUT = 0.1
 
-DEFAULT_NCP_SEED = 22222
+DEFAULT_NCP_SEED = 22224
 
 IMAGE_SHAPE = (144, 256, 3)
 IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
@@ -275,7 +275,7 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save('saved_models/fine_tuned_woscheduler_lr0.0001_aug_data.h5')
+mymodel.save('saved_models/fine_tuned_woscheduler_seed22224_lr0.0001_150traj.h5')
 
 
 
