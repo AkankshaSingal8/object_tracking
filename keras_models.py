@@ -348,8 +348,8 @@ def generate_normalization_layers(x, single_step: bool):
     rescaling_layer = keras.layers.experimental.preprocessing.Rescaling(1. / 255)
 
     normalization_layer = keras.layers.experimental.preprocessing.Normalization(
-        mean=[0.41718618, 0.48529191, 0.38133072],
-        variance=[.057, .05, .061])
+        mean=[0.6042006463205742, 0.6042006463205742, 0.6042006880578502],
+        variance=[0.0103, 0.0103, 0.0103])
 
     x = rescaling_layer(x)
     x = wrap_time(normalization_layer, single_step)(x)
