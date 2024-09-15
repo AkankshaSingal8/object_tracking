@@ -245,7 +245,7 @@ def get_val_dataset_multi(root, image_size, seq_len, shift, stride, validation_r
     # return training, validation
     return training
 
-shift: int = 16
+shift: int = 1
 stride: int = 1
 decay_rate: float = 0.95
 val_split: float = 0.2
@@ -254,7 +254,7 @@ seq_len = 64
 val_split: float = 0.1
 label_scale: float = 1
 
-training_root = "../fly_to_target_dataset/coreset"
+training_root = "../fly_to_target_dataset/dataset"
 #datasets = load_dataset_multi('Test1', IMAGE_SHAPE, seq_len, shift, stride, label_scale)
 training_dataset = get_dataset_multi(training_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
 print('load dataset shape', training_dataset.element_spec)
@@ -275,7 +275,7 @@ print(history)
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save('saved_models/fine_tuned_woscheduler_seed22222_lr0.0001_coreset.h5')
+mymodel.save('saved_models/fine_tuned_woscheduler_seed22222_lr0.0001_addedhover160.h5')
 
 
 
