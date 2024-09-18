@@ -27,7 +27,7 @@ def tlen(dataset):
         pass
     return ix
 
-training_root = "../fly_to_target_dataset/diff_dataset"
+training_root = "../fly_to_target_dataset/coreset"
 val_root = "../fly_to_target_dataset/test_data"
 DROPOUT = 0.1
 
@@ -42,19 +42,19 @@ augmentation_params = None
 single_step = False
 no_norm_layer = False
 
-decay_rate: float = 0.95
-lr: float = 0.0001
-# lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
-                                                            # decay_rate=decay_rate, staircase=True)
+decay_rate: float = 0.85
+lr: float = 0.001
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
+                                                            decay_rate=decay_rate, staircase=True)
 #Adam optimizer
-optimizer = keras.optimizers.Adam(learning_rate=lr)
+optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
 
 gpus = tf.config.list_logical_devices('GPU')
 strategy = tf.distribute.MirroredStrategy(gpus)
 with strategy.scope():
     mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
     mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
-    mymodel.load_weights('model-ncp-val.hdf5')
+    mymodel.load_weights('saved_models/fine_tuned_woscheduler_seed22222_lr0.0001_150traj.h5')
 
     mymodel.summary()
 
@@ -102,4 +102,4 @@ val_loss = history.history['val_loss'][-1]
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save(f'saved_models/fine_tuned_woscheduler_seed22222_lr0.0001_trainloss{train_loss:.5f}_valloss{val_loss:.5f}_diff_dataset.h5')
+mymodel.save(f'saved_models/retrain_150traj_wscheduler0.85_seed22222_lr0.001_trainloss{train_loss:.5f}_valloss{val_loss:.5f}_coreset.h5')
