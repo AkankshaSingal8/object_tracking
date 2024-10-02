@@ -102,4 +102,4 @@ val_loss = history.history['val_loss'][-1]
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save(f'saved_models/retrain_150traj_wscheduler0.85_seed22222_lr0.001_trainloss{train_loss:.5f}_valloss{val_loss:.5f}_coreset.h5')
+mymodel.save(f'saved_models/retrain_150traj_wscheduler0.85_seed22222_lr0.001_trainloss{train_loss:.5f}_valloss{val_loss:.5f}_coreset900.h5')
