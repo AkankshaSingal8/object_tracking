@@ -17,11 +17,47 @@ from typing import Iterable, Dict
 import tensorflow as tf
 import kerasncp as kncp
 from kerasncp.tf import LTCCell, WiredCfcCell
+from tensorflow.python.keras.models import Functional
 from tensorflow import keras
 import numpy as np
 from matplotlib.image import imread
 import pandas as pd
+from keras_models import generate_ncp_model
 
+def generate_hidden_list(model: Functional, return_numpy: bool = True):
+    """
+    Generates a list of tensors that are used as the hidden state for the argument model when it is used in single-step
+    mode. The batch dimension (0th dimension) is assumed to be 1 and any other dimensions (seq len dimensions) are
+    assumed to be 0
+
+    :param return_numpy: Whether to return output as numpy array. If false, returns as keras tensor
+    :param model: Single step functional model to infer hidden states for
+    :return: list of hidden states with 0 as value
+    """
+    constructor = np.zeros if return_numpy else tf.zeros
+    hiddens = []
+    print("Length of model input shape: ", len(model.input_shape))
+    if len(model.input_shape)==1:
+        lool = model.input_shape[0][1:]
+    else:
+        print("model input shape: ", model.input_shape)
+        lool = model.input_shape[1:]
+    print("lool: ", lool)
+    for input_shape in lool:  # ignore 1st output, as is this control output
+        hidden = []
+        for i, shape in enumerate(input_shape):
+            if shape is None:
+                if i == 0:  # batch dim
+                    hidden.append(1)
+                    continue
+                elif i == 1:  # seq len dim
+                    hidden.append(0)
+                    continue
+                else:
+                    print("Unable to infer hidden state shape. Leaving as none")
+            hidden.append(shape)
+        hiddens.append(constructor(hidden))
+    return hiddens
 
 current_state = State()
 current_pose = PoseStamped()
@@ -42,8 +78,26 @@ tf.config.set_visible_devices([], 'GPU')
 
 rospy.loginfo("current working dir")
 rospy.loginfo(os.getcwd())
-with tf.device('/cpu:0'):
-    model = tf.keras.models.load_model(root)
+root = '/home/iiitd/catkin_ws/src/rover_tracking/scripts/retrain_150traj_woscheduler_seed22222_lr0.0001_trainloss0.00144_valloss0.00030_coreset.h5'
+goal_image_file = '/home/iiitd/catkin_ws/src/rover_tracking/scripts/goal_image.png'
+goal_image = cv2.imread(goal_image_file)
+
+DEFAULT_NCP_SEED = 22222
+
+batch_size = None
+seq_len = 64
+augmentation_params = None
+no_norm_layer = False
+single_step = True
+model = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
+model.load_weights(root)
+
+
+hiddens = generate_hidden_list(model= model, return_numpy=True)
+
+
+#with tf.device('/cpu:0'):
+#    model = tf.keras.models.load_model(root)
 
 def state_cb(msg):
     global current_state
@@ -66,15 +120,15 @@ def image_callback(msg):
 
     CV_IMAGE = cv_img
     # rospy.loginfo("got image")
-    save_dir = "./image_feed"
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+    #save_dir = "./image_feed"
+    #if not os.path.exists(save_dir):
+    #	os.makedirs(save_dir)
 
     # Define the filename
-    filename = os.path.join(save_dir, "image_{}.png".format(time.time()))
+    #filename = os.path.join(save_dir, "image_{}.png".format(time.time()))
     
     # Save the image
-    cv2.imwrite(filename, cv_img)
+    #cv2.imwrite(filename, cv_img)
     # rospy.loginfo("Image saved as: {}".format(filename))
 
 
@@ -86,46 +140,66 @@ def model_vel():
     global image_sequences
     global vel_msg
     global COUNT
+    global hiddens
+    global goal_image
 
     rospy.loginfo("Entering function to get pred")
     img = CV_IMAGE
-    save_dir = "./vel_input"
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+
+    img = np.array(img)
+    im_network = np.expand_dims(img, 0)
+    
+    difference = cv2.absdiff(img, goal_image)
+    diff_image = np.array(difference)
+    diff_image = np.expand_dims(diff_image, 0)
+
+    # save_dir = "./vel_input"
+    # if not os.path.exists(save_dir):
+    #   os.makedirs(save_dir)
 
     # Define the filename
-    filename = os.path.join(save_dir, "image_{}.png".format(time.time()))
+    # filename = os.path.join(save_dir, "image_{}.png".format(time.time()))
     
     # Save the image
-    cv2.imwrite(filename, img)
+    # cv2.imwrite(filename, img)
 
-    print(INDEX)
-    if INDEX == 0:
-        image_sequences = np.stack([img] * 64)
+    # print(INDEX)
+    # if INDEX == 0:
+    #    image_sequences = np.stack([img] * 64)
         
-        # print(image_sequences.shape)
+    #     print(image_sequences.shape)
         
-    else:
+    # else:
         
-        image_sequences = np.vstack((image_sequences[0][1:], [img]))
-        # print(image_sequences.shape)
+    #     image_sequences = np.vstack((image_sequences[0][1:], [img]))
+    #     print(image_sequences.shape)
 
-    image_sequences = np.expand_dims(image_sequences, axis=0)
-    INDEX += 1
+    # image_sequences = np.expand_dims(image_sequences, axis=0)
+    # INDEX += 1
 
-    with tf.device('/cpu:0'):
-        preds = model.predict(image_sequences)
-        print(preds[0][63])
-        
-        vx, vy, vz, omega_z = preds[0][63]
+    # with tf.device('/cpu:0'):
+    #    preds = model.predict(image_sequences)
+    #     print(preds[0][63])
+    
+    output = model.predict([diff_image, *hiddens])
+    
+    hiddens = output[1:]
+    preds = output[0][0]
+    vx, vy, vz, omega_z = preds[0], preds[1], preds[2], preds[3]
 
-        # Set the velocities in the message
-        vel_msg.linear.x = 2 * vx
-        vel_msg.linear.y = 2 * vy
-        vel_msg.linear.z = 2 * vz
-        vel_msg.angular.z = omega_z
+    # Set the velocities in the message
+    vel_msg.linear.x = vx 
+    vel_msg.linear.y = vy 
+    vel_msg.linear.z = vz 
+    vel_msg.angular.z = omega_z 
+    
+    px = current_pose.pose.position.x
+    py = current_pose.pose.position.y
+    pz = current_pose.pose.position.z
 
-    rospy.loginfo("got velocity")
+    #rospy.loginfo("got velocity")
+    rospy.loginfo(f"Current Position: x={px}, y={py}, z={pz} ")
+    rospy.loginfo(f" velocity: vx={vx}, vy={vy}, vz={vz}, omega_z={omega_z}")
     VEL = True
     COUNT += 1
 
@@ -149,7 +223,7 @@ if __name__ == "__main__":
     img_subscriber = rospy.Subscriber("/cgo3_camera/image_raw", Image, image_callback)
 
 
-    # Setpoint publishing MUST be faster than 2Hz
+    # Setpoint publishing MUST be faster than 20Hz
     rate = rospy.Rate(20)
 
     # Wait for Flight Controller connection
@@ -158,9 +232,9 @@ if __name__ == "__main__":
 
     pose = PoseStamped()
 
-    pose.pose.position.x = 2
-    pose.pose.position.y = 2
-    pose.pose.position.z = 8
+    pose.pose.position.x = 0
+    pose.pose.position.y = 0
+    pose.pose.position.z = 5
 
     # vel_msg = Twist()
     # vel_msg.linear.x = 0.5 
@@ -204,7 +278,7 @@ if __name__ == "__main__":
             # rospy.loginfo("Publishing pose")
             local_pos_pub.publish(pose)
             # print("pose", current_pose.pose.position.z)
-            if current_pose.pose.position.z > 5.5:
+            if current_pose.pose.position.z > 4.8:
                 rospy.loginfo("Target pos reached")
                 MODEL_MODE = True
         else:

@@ -27,7 +27,7 @@ def tlen(dataset):
         pass
     return ix
 
-training_root = "../fly_to_target_dataset/coreset"
+training_root = "../fly_to_target_dataset/diff_coreset"
 val_root = "../fly_to_target_dataset/test_data"
 DROPOUT = 0.1
 
@@ -54,13 +54,13 @@ strategy = tf.distribute.MirroredStrategy(gpus)
 with strategy.scope():
     mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
     mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
-    mymodel.load_weights('saved_models/fine_tuned_woscheduler_seed22222_lr0.0001_150traj.h5')
+    mymodel.load_weights('saved_models/fine_tuned_woscheduler_seed22222_lr0.0001_trainloss0.00012_valloss0.08719_diff_dataset.h5')
 
     mymodel.summary()
 
 shift: int = 1
 stride: int = 1
-decay_rate: float = 0.95
+# decay_rate: float = 0.95
 val_split: float = 0.2
 label_scale: float = 1
 seq_len = 64
@@ -102,4 +102,4 @@ val_loss = history.history['val_loss'][-1]
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save(f'saved_models/retrain_150traj_wscheduler0.85_seed22222_lr0.001_trainloss{train_loss:.5f}_valloss{val_loss:.5f}_coreset900.h5')
+mymodel.save(f'saved_models/retrain_difftraj_wscheduler0.85_seed22222_lr0.001_trainloss{train_loss:.5f}_valloss{val_loss:.5f}_diffcoreset900.h5')
