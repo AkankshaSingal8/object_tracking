@@ -7,9 +7,6 @@ from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeReq
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import TwistStamped
 from sensor_msgs.msg import Image
-from sensor_msgs.msg import NavSatFix
-
-
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import os
@@ -64,7 +61,6 @@ def generate_hidden_list(model: Functional, return_numpy: bool = True):
 
 current_state = State()
 current_pose = PoseStamped()
-current_global_position = NavSatFix()
 
 MODEL_MODE = False
 VEL = False
@@ -82,9 +78,7 @@ tf.config.set_visible_devices([], 'GPU')
 
 rospy.loginfo("current working dir")
 rospy.loginfo(os.getcwd())
-root = '/home/iiitd/catkin_ws/src/rover_tracking/scripts/retrain_150traj_woscheduler_seed22222_lr0.0001_trainloss0.00144_valloss0.00030_coreset.h5'
-goal_image_file = '/home/iiitd/catkin_ws/src/rover_tracking/scripts/goal_image.png'
-goal_image = cv2.imread(goal_image_file)
+root = '/home/iiitd/catkin_ws/src/rover_tracking/scripts/fine_tuned_woscheduler.h5'
 
 DEFAULT_NCP_SEED = 22222
 
@@ -110,11 +104,6 @@ def state_cb(msg):
 def position_cb(pose):
     global current_pose
     current_pose = pose
-
-def global_position_cb(msg):
-    global current_global_position
-    current_global_position = msg
-    # rospy.loginfo(f"Global Position: Latitude={msg.latitude}, Longitude={msg.longitude}, Altitude={msg.altitude}")
 
 def image_callback(msg):
     global CV_IMAGE
@@ -150,18 +139,11 @@ def model_vel():
     global vel_msg
     global COUNT
     global hiddens
-    global goal_image
 
     rospy.loginfo("Entering function to get pred")
     img = CV_IMAGE
-
     img = np.array(img)
     im_network = np.expand_dims(img, 0)
-    
-    difference = cv2.absdiff(img, goal_image)
-    diff_image = np.array(difference)
-    diff_image = np.expand_dims(diff_image, 0)
-
     # save_dir = "./vel_input"
     # if not os.path.exists(save_dir):
     #   os.makedirs(save_dir)
@@ -190,17 +172,17 @@ def model_vel():
     #    preds = model.predict(image_sequences)
     #     print(preds[0][63])
     
-    output = model.predict([diff_image, *hiddens])
+    output = model.predict([im_network, *hiddens])
     
     hiddens = output[1:]
     preds = output[0][0]
     vx, vy, vz, omega_z = preds[0], preds[1], preds[2], preds[3]
 
     # Set the velocities in the message
-    vel_msg.linear.x = vx 
-    vel_msg.linear.y = vy 
-    vel_msg.linear.z = vz 
-    vel_msg.angular.z = omega_z 
+    vel_msg.linear.x = vx
+    vel_msg.linear.y = vy
+    vel_msg.linear.z = vz
+    vel_msg.angular.z = omega_z
     
     px = current_pose.pose.position.x
     py = current_pose.pose.position.y
@@ -220,8 +202,6 @@ if __name__ == "__main__":
 
     local_pos_pub = rospy.Publisher("mavros/setpoint_position/local", PoseStamped, queue_size=10)
     local_position_subscriber = rospy.Subscriber('/mavros/local_position/pose', PoseStamped, position_cb)
-
-    rospy.Subscriber("/mavros/global_position/global", NavSatFix, global_position_cb)
 
     rospy.wait_for_service("/mavros/cmd/arming")
     arming_client = rospy.ServiceProxy("mavros/cmd/arming", CommandBool)
@@ -245,7 +225,7 @@ if __name__ == "__main__":
 
     pose.pose.position.x = 0
     pose.pose.position.y = 0
-    pose.pose.position.z = 5
+    pose.pose.position.z = 9
 
     # vel_msg = Twist()
     # vel_msg.linear.x = 0.5 
@@ -282,26 +262,21 @@ if __name__ == "__main__":
 
                 last_req = rospy.Time.now()
         
-        # Check the current position's Z value
-        if current_pose.pose.position.z <= 1.5:
-            rospy.loginfo("Drone altitude is below 1. Adjusting altitude to Z = 5.")
-            pose.pose.position.z = 5  # Reset the target altitude to Z = 5
-            MODEL_MODE = False
-            VEL = False
+        
         
 
         if MODEL_MODE == False or VEL == False:
             # rospy.loginfo("Publishing pose")
             local_pos_pub.publish(pose)
             # print("pose", current_pose.pose.position.z)
-            if current_pose.pose.position.z > 4.8:
+            if current_pose.pose.position.z > 8:
                 rospy.loginfo("Target pos reached")
                 MODEL_MODE = True
         else:
             
             velocity_publisher.publish(vel_msg)
             rospy.loginfo("Vel published")
-        
+                
         
         if MODEL_MODE:
             rospy.loginfo("Calculating vel")
