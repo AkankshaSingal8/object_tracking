@@ -7,6 +7,9 @@ from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeReq
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import TwistStamped
 from sensor_msgs.msg import Image
+from sensor_msgs.msg import NavSatFix
+
+
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import os
@@ -61,6 +64,7 @@ def generate_hidden_list(model: Functional, return_numpy: bool = True):
 
 current_state = State()
 current_pose = PoseStamped()
+current_global_position = NavSatFix()
 
 MODEL_MODE = False
 VEL = False
@@ -106,6 +110,11 @@ def state_cb(msg):
 def position_cb(pose):
     global current_pose
     current_pose = pose
+
+def global_position_cb(msg):
+    global current_global_position
+    current_global_position = msg
+    # rospy.loginfo(f"Global Position: Latitude={msg.latitude}, Longitude={msg.longitude}, Altitude={msg.altitude}")
 
 def image_callback(msg):
     global CV_IMAGE
@@ -211,6 +220,8 @@ if __name__ == "__main__":
 
     local_pos_pub = rospy.Publisher("mavros/setpoint_position/local", PoseStamped, queue_size=10)
     local_position_subscriber = rospy.Subscriber('/mavros/local_position/pose', PoseStamped, position_cb)
+
+    rospy.Subscriber("/mavros/global_position/global", NavSatFix, global_position_cb)
 
     rospy.wait_for_service("/mavros/cmd/arming")
     arming_client = rospy.ServiceProxy("mavros/cmd/arming", CommandBool)
