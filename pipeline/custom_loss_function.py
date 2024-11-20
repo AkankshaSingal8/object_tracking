@@ -21,7 +21,7 @@ import pandas as pd
 import time
 from keras_models import generate_ncp_model
 
-training_root = "../fly_to_target_dataset/diff_dataset"
+training_root = "../fly_to_target_dataset/diff_coreset"
 val_root = "../fly_to_target_dataset/test_data"
 DROPOUT = 0.1
 
@@ -176,7 +176,7 @@ goal_image = tf.convert_to_tensor(img_arrays, dtype=tf.float32)
 
 losses = []
 mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
-# mymodel.load_weights('saved_models/custom_loss_function.h5')
+mymodel.load_weights('pipeline/saved_models/custom_loss_function_diff_dataset.h5')
 
 lr: float = 0.0001
 decay_rate: float = 0.85
@@ -235,4 +235,4 @@ plt.grid()
 plt.show()
 plt.close()
 
-mymodel.save(f'pipeline/saved_models/custom_loss_function_diff_dataset.h5')
+mymodel.save(f'pipeline/saved_models/retrained_custom_loss_function_diff_coreset.h5')
