@@ -49,15 +49,15 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
         return tf.data.Dataset.zip((sfb, slb))
         # return sub.batch(seq_len, drop_remainder=True)
     
-    # def apply_random_augmentations(image):
-    #     # Generate a random number and apply augmentations with a 50% probability
-    #     if tf.random.uniform(()) > 0.3:  # 30% chance to apply augmentations
-    #         image = tf.image.convert_image_dtype(image, tf.float32)  # Convert to float32 for augmentation
-    #         image = tf.image.random_brightness(image, max_delta=0.1)  # Random brightness adjustment
-    #         image = tf.image.random_contrast(image, lower=0.8, upper=1.2)  # Random contrast adjustment
-    #         image = tf.image.random_saturation(image, lower=0.8, upper=1.2)  # Random saturation adjustment
-    #         image = tf.image.convert_image_dtype(image, tf.uint8)  # Convert back to uint8
-    #     return image
+    def apply_random_augmentations(image):
+        # Generate a random number and apply augmentations with a 50% probability
+        if tf.random.uniform(()) > 0.3:  # 30% chance to apply augmentations
+            image = tf.image.convert_image_dtype(image, tf.float32)  # Convert to float32 for augmentation
+            image = tf.image.random_brightness(image, max_delta=0.1)  # Random brightness adjustment
+            image = tf.image.random_contrast(image, lower=0.8, upper=1.2)  # Random contrast adjustment
+            image = tf.image.random_saturation(image, lower=0.8, upper=1.2)  # Random saturation adjustment
+            image = tf.image.convert_image_dtype(image, tf.uint8)  # Convert back to uint8
+        return image
 
     
     datasets = []
@@ -65,7 +65,7 @@ def load_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
     #output_means, output_stds = get_output_normalization(root)
 
     
-    for i in range(len(os.listdir(root)[:1])):
+    for i in range(len(os.listdir(root))):
         directory = i + 1
         csv_file_name = f"{root}/{str(directory)}/data_out.csv"
         labels = np.genfromtxt(csv_file_name, delimiter=',', skip_header=1, dtype=np.float32)

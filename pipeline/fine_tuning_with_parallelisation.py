@@ -27,8 +27,8 @@ def tlen(dataset):
         pass
     return ix
 
-training_root = "../fly_to_target_dataset/diff_coreset"
-val_root = "../fly_to_target_dataset/test_data"
+training_root = "../quadrant_wise_dataset/quadrant_dataset"
+# val_root = "../fly_to_target_dataset/test_data"
 DROPOUT = 0.1
 
 DEFAULT_NCP_SEED = 22222
@@ -54,7 +54,7 @@ strategy = tf.distribute.MirroredStrategy(gpus)
 with strategy.scope():
     mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
     mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
-    mymodel.load_weights('saved_models/fine_tuned_woscheduler_seed22222_lr0.0001_trainloss0.00012_valloss0.08719_diff_dataset.h5')
+    mymodel.load_weights('saved_models/retrain_150traj_wscheduler0.85_seed22222_lr0.001_trainloss0.00035_valloss0.00019_coreset900.h5')
 
     mymodel.summary()
 
@@ -69,37 +69,38 @@ label_scale: float = 1
 
 with tf.device('/cpu:0'):
     training_dataset = get_dataset_multi(training_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
-    val_data = get_val_dataset_multi(val_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
+    # val_data = get_val_dataset_multi(val_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
 
 print('\n\nTraining Dataset Size: %d\n\n' % tlen(training_dataset))
 
 print('load dataset shape', training_dataset.element_spec)
 training_dataset = training_dataset.shuffle(100).batch(64)
 
-val_dataset = val_data.batch(64)
-print('load val dataset shape', val_dataset.element_spec)
+# val_dataset = val_data.batch(64)
+# print('load val dataset shape', val_dataset.element_spec)
 
 options = tf.data.Options()
 options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
 training_dataset = training_dataset.with_options(options)
-validation_dataset = val_dataset.with_options(options)
+# validation_dataset = val_dataset.with_options(options)
 # Have GPU prefetch next training batch while first one runs
 training_dataset = training_dataset.prefetch(tf.data.AUTOTUNE)
-validation_dataset = validation_dataset.prefetch(tf.data.AUTOTUNE)
+# validation_dataset = validation_dataset.prefetch(tf.data.AUTOTUNE)
 
 
 epochs: int = 100
 callbacks = None
 #setting validation data to None
-history = mymodel.fit(x=training_dataset, validation_data=val_dataset, epochs=epochs,verbose=1, use_multiprocessing=False, workers=1, max_queue_size=5)
+history = mymodel.fit(x=training_dataset, epochs=epochs,verbose=1, use_multiprocessing=False, workers=1, max_queue_size=5)
 print(history)
 
 # Extract the final training and validation loss
 train_loss = history.history['loss'][-1]
-val_loss = history.history['val_loss'][-1]
+mymodel.save(f'saved_models/retrain_quadrant_dataset_wscheduler0.85_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch100.h5')
+# val_loss = history.history['val_loss'][-1]
 
 
 accuracy = mymodel.evaluate(x=training_dataset)
 print('Accuracy:' ,accuracy)
 
-mymodel.save(f'saved_models/retrain_difftraj_wscheduler0.85_seed22222_lr0.001_trainloss{train_loss:.5f}_valloss{val_loss:.5f}_diffcoreset900.h5')
+
