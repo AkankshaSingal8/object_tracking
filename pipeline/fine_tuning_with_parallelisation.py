@@ -27,7 +27,7 @@ def tlen(dataset):
         pass
     return ix
 
-training_root = "../quadrant_wise_dataset/goal_height5_diff"
+training_root = "../quadrant_wise_dataset/goal_height5_diff_coreset"
 # val_root = "../fly_to_target_dataset/test_data"
 DROPOUT = 0.1
 
