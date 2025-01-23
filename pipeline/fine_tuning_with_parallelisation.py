@@ -27,7 +27,7 @@ def tlen(dataset):
         pass
     return ix
 
-training_root = "../quadrant_wise_dataset/goal_height5_diff_coreset"
+training_root = "../quadrant_wise_dataset/entire_diff_dataset"
 # val_root = "../fly_to_target_dataset/test_data"
 DROPOUT = 0.1
 
@@ -54,7 +54,7 @@ strategy = tf.distribute.MirroredStrategy(gpus)
 with strategy.scope():
     mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
     mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
-    mymodel.load_weights('saved_models/retrain_goal_height5_wscheduler0.85_seed22222_lr0.0001_trainloss0.00070_epoch100.h5')
+    mymodel.load_weights('saved_models/retrain_difftraj_wscheduler0.85_seed22222_lr0.001_trainloss0.00016_valloss0.13141_diffcoreset900.h5')
 
     mymodel.summary()
 
@@ -96,7 +96,7 @@ print(history)
 
 # Extract the final training and validation loss
 train_loss = history.history['loss'][-1]
-mymodel.save(f'saved_models/retrain_goal_height5_wscheduler0.85_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}_coreset_height5.h5')
+mymodel.save(f'saved_models/retrain_diff_entire_data_different_heights_wscheduler0.85_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
 # val_loss = history.history['val_loss'][-1]
 
 
