@@ -27,7 +27,7 @@ def tlen(dataset):
         pass
     return ix
 
-training_root = "../quadrant_wise_dataset/mix_goal_heights_diff"
+training_root = "../quadrant_wise_dataset/mix_goal_heights_diff_not_abs_curr-goal"
 # val_root = "../fly_to_target_dataset/test_data"
 DROPOUT = 0.1
 
@@ -43,7 +43,7 @@ single_step = False
 no_norm_layer = False
 
 decay_rate: float = 0.85
-lr: float = 0.01
+lr: float = 0.0001
 lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
                                                             decay_rate=decay_rate, staircase=True)
 #Adam optimizer
@@ -54,7 +54,7 @@ strategy = tf.distribute.MirroredStrategy(gpus)
 with strategy.scope():
     mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
     mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
-    mymodel.load_weights('saved_models/retrain_diff_goal_mix_3to5_wscheduler0.85_seed22222_lr0.001_trainloss0.00050_epoch100.h5')
+    mymodel.load_weights('saved_models/retrain_mix_goal_heights_diff_coreset_wscheduler0.85_seed22222_lr0.001_trainloss0.00008_epoch100.h5')
 
     mymodel.summary()
 
@@ -68,39 +68,42 @@ val_split: float = 0.1
 label_scale: float = 1
 
 with tf.device('/cpu:0'):
-    training_dataset = get_dataset_multi(training_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
+    training_dataset, validation_dataset = get_dataset_multi(training_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
     # val_data = get_val_dataset_multi(val_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
 
-print('\n\nTraining Dataset Size: %d\n\n' % tlen(training_dataset))
+training_dataset = training_dataset.shuffle(100).batch(64)
+validation_dataset = validation_dataset.batch(64)
+# print('\n\nTraining Dataset Size: %d\n\n' % tlen(dataset))
 
 print('load dataset shape', training_dataset.element_spec)
-training_dataset = training_dataset.shuffle(100).batch(64)
-
-# val_dataset = val_data.batch(64)
-# print('load val dataset shape', val_dataset.element_spec)
 
 options = tf.data.Options()
 options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
 training_dataset = training_dataset.with_options(options)
-# validation_dataset = val_dataset.with_options(options)
+validation_dataset = validation_dataset.with_options(options)
 # Have GPU prefetch next training batch while first one runs
 training_dataset = training_dataset.prefetch(tf.data.AUTOTUNE)
-# validation_dataset = validation_dataset.prefetch(tf.data.AUTOTUNE)
+validation_dataset = validation_dataset.prefetch(tf.data.AUTOTUNE)
 
 
-epochs: int = 100
+epochs: int = 50
+csv_logger = tf.keras.callbacks.CSVLogger('pipeline/training_log_new_diff_scratch_wscheduler0.85_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.csv', separator=',', append=False)
 callbacks = None
 #setting validation data to None
-history = mymodel.fit(x=training_dataset, epochs=epochs,verbose=1, use_multiprocessing=False, workers=1, max_queue_size=5)
+history = mymodel.fit(x=training_dataset, validation_data=validation_dataset, epochs=epochs,verbose=1, use_multiprocessing=False, workers=1, max_queue_size=5, callbacks=[csv_logger],)
 print(history)
 
-# Extract the final training and validation loss
+# # Extract the final training and validation loss
 train_loss = history.history['loss'][-1]
-mymodel.save(f'saved_models/scratch_wscheduler0.85_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
+mymodel.save(f'saved_models/new_diff_scratch_wscheduler0.85_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
 # val_loss = history.history['val_loss'][-1]
 
 
-accuracy = mymodel.evaluate(x=training_dataset)
-print('Accuracy:' ,accuracy)
+
+train_accuracy = mymodel.evaluate(x=training_dataset, verbose=1)
+val_accuracy = mymodel.evaluate(x=validation_dataset, verbose=1)
+
+print('Final Training Accuracy:', train_accuracy)
+print('Final Val Accuracy:', val_accuracy)
 
 

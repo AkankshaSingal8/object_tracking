@@ -114,11 +114,10 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
             cnt += ix
     print('n windows: %d' % cnt)
 
-    val_ix = 0
 
-    # val_ix = int(len(ds) * validation_ratio)
-    # print('\nval_ix: %d\n' % val_ix)
-    # validation_datasets = ds[:val_ix]
+    val_ix = int(len(ds) * validation_ratio)
+    print('\nval_ix: %d\n' % val_ix)
+    validation_datasets = ds[:val_ix]
 
     training_datasets = ds[val_ix:]
 
@@ -127,10 +126,9 @@ def get_dataset_multi(root, image_size, seq_len, shift, stride, validation_ratio
     #                                                                     f"Train dataset len: {len(training_datasets)}" \
     #                                                                     f"Val dataset len: {len(validation_datasets)}"
     training = tf.data.Dataset.from_tensor_slices(training_datasets).flat_map(lambda x: x)
-    # validation = tf.data.Dataset.from_tensor_slices(validation_datasets).flat_map(lambda x: x)
+    validation = tf.data.Dataset.from_tensor_slices(validation_datasets).flat_map(lambda x: x)
 
-    # return training, validation
-    return training
+    return training, validation
 
 def load_val_dataset_multi(root, image_size, seq_len, shift, stride, label_scale):
     file_ending = 'png'
