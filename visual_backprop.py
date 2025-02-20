@@ -37,8 +37,9 @@ mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_si
 # mymodel.load_weights('model-ncp-val.hdf5')
 
 # custom model weights
-mymodel.load_weights('ncp_model_b64_seq64_lr0.001.h5')
+mymodel.load_weights('./saved_models/retrain_mix_goal_heights_diff_coreset_wscheduler0.85_seed22222_lr0.001_trainloss0.00008_epoch100.h5')
 
+# mymodel.load_weights("./saved_models/retrain_difftraj_wscheduler0.85_seed22222_lr0.001_trainloss0.00016_valloss0.13141_diffcoreset900.h5")
 conv_layers = [layer for layer in mymodel.layers if isinstance(layer, Conv2D)]
 
 act_model_inputs = mymodel.inputs[0]  # don't want to take in hidden state, just image
@@ -102,7 +103,8 @@ def load_image(image_path):
     img_array = tf.convert_to_tensor(img_array)
     return img_array
 
-def plot_saliency_map(saliency_map, image_size, root, file_path, title='Saliency Map'):
+# def plot_saliency_map(saliency_map, image_size, root, file_path, title='Saliency Map'):
+def plot_saliency_map(saliency_map, image_size, title='Saliency Map'):
     # Normalize the saliency map for better visualization
     saliency_map = (saliency_map - tf.reduce_min(saliency_map)) / (tf.reduce_max(saliency_map) - tf.reduce_min(saliency_map) + 1e-6)
     
@@ -121,30 +123,32 @@ def plot_saliency_map(saliency_map, image_size, root, file_path, title='Saliency
     plt.colorbar()  # Adds a colorbar to interpret values
     plt.title(title)
     plt.axis('off')  # Hide the axis
-    # plt.show()
-    plt.savefig(os.path.join(root, file_path))
+    plt.show()
+    # plt.savefig(os.path.join(root, file_path))
     plt.close()
-    print("Saved", file_path)
+    # print("Saved", file_path)
 
-for index in range(3, 13):
-    root_directory = './original_dataset/' + str(index)
-    saliency_directory = './saliency_maps/' + str(index)
-    if not os.path.exists(saliency_directory):
-        os.makedirs(saliency_directory, exist_ok=True)
-    sorted_files = os.listdir(root_directory)
+# for index in range(3, 13):
+#     root_directory = './original_dataset/' + str(index)
+#     saliency_directory = './saliency_maps/' + str(index)
+#     if not os.path.exists(saliency_directory):
+#         os.makedirs(saliency_directory, exist_ok=True)
+#     sorted_files = os.listdir(root_directory)
 
-    for i in range (len(sorted_files) - 2):
-        file = 'Image'+str(i + 1)+'.png'
-        print("Processing", file)
-        file_path = os.path.join(root_directory, file)
-        img = load_image(file_path)
-        saliency_map = compute_visualbackprop(img, vis_model)
-        plot_saliency_map(saliency_map, (224, 224), saliency_directory, file)
-        
+#     for i in range (len(sorted_files) - 2):
+#         file = 'Image'+str(i + 1)+'.png'
+#         print("Processing", file)
+#         file_path = os.path.join(root_directory, file)
+#         img = load_image(file_path)
+#         saliency_map = compute_visualbackprop(img, vis_model)
+#         plot_saliency_map(saliency_map, (224, 224), saliency_directory, file)
+    
 
-# img = load_image('./Image01.png')
-# saliency_map = compute_visualbackprop(img, vis_model)
-# print(saliency_map.shape)
+# img = load_image('../fly_to_target_dataset/diff_dataset/1/Image1.png')
+img = load_image('../gazebo_environment/markerless/diff_images/Image30.png')
+saliency_map = compute_visualbackprop(img, vis_model)
+plot_saliency_map(saliency_map, (224, 224))
+print(saliency_map.shape)
 
 
 
