@@ -27,7 +27,7 @@ def tlen(dataset):
         pass
     return ix
 
-training_root = "../quadrant_wise_dataset/mix_goal_heights_diff_not_abs_curr-goal"
+training_root = "../uav_tracking_dataset/tracking_dataset_diff_images"
 # val_root = "../fly_to_target_dataset/test_data"
 DROPOUT = 0.1
 
@@ -54,14 +54,14 @@ strategy = tf.distribute.MirroredStrategy(gpus)
 with strategy.scope():
     mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
     mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
-    mymodel.load_weights('saved_models/retrain_mix_goal_heights_diff_coreset_wscheduler0.85_seed22222_lr0.001_trainloss0.00008_epoch100.h5')
+    mymodel.load_weights('saved_models/retrain_150traj_wscheduler0.85_seed22222_lr0.001_trainloss0.00035_valloss0.00019_coreset900.h5')
 
     mymodel.summary()
 
 shift: int = 1
 stride: int = 1
-# decay_rate: float = 0.95
-val_split: float = 0.2
+decay_rate: float = 0.85
+val_split: float = 0.1
 label_scale: float = 1
 seq_len = 64
 val_split: float = 0.1
@@ -87,7 +87,7 @@ validation_dataset = validation_dataset.prefetch(tf.data.AUTOTUNE)
 
 
 epochs: int = 50
-csv_logger = tf.keras.callbacks.CSVLogger('pipeline/training_log_new_diff_scratch_wscheduler0.85_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.csv', separator=',', append=False)
+csv_logger = tf.keras.callbacks.CSVLogger('pipeline/training_log_tracking_model_wscheduler{decay_rate}_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.csv', separator=',', append=False)
 callbacks = None
 #setting validation data to None
 history = mymodel.fit(x=training_dataset, validation_data=validation_dataset, epochs=epochs,verbose=1, use_multiprocessing=False, workers=1, max_queue_size=5, callbacks=[csv_logger],)
@@ -95,7 +95,7 @@ print(history)
 
 # # Extract the final training and validation loss
 train_loss = history.history['loss'][-1]
-mymodel.save(f'saved_models/new_diff_scratch_wscheduler0.85_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
+mymodel.save(f'saved_models/tracking_model_wscheduler{decay_rate}_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
 # val_loss = history.history['val_loss'][-1]
 
 

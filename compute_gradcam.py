@@ -1,7 +1,3 @@
-import argparse
-import copy
-import json
-import os.path
 from enum import Enum
 from typing import Dict, Tuple, Union, Optional, Any
 import tensorflow as tf
@@ -29,6 +25,44 @@ from tensorflow.python.keras import Model
 from tensorflow.python.keras.layers import Conv2D
 from tensorflow.python.keras.models import Functional
 import numpy as np
+
+import cv2
+
+
+def generate_hidden_list(model: Functional, return_numpy: bool = True):
+    """
+    Generates a list of tensors that are used as the hidden state for the argument model when it is used in single-step
+    mode. The batch dimension (0th dimension) is assumed to be 1 and any other dimensions (seq len dimensions) are
+    assumed to be 0
+
+    :param return_numpy: Whether to return output as numpy array. If false, returns as keras tensor
+    :param model: Single step functional model to infer hidden states for
+    :return: list of hidden states with 0 as value
+    """
+    constructor = np.zeros if return_numpy else tf.zeros
+    hiddens = []
+    print("Length of model input shape: ", len(model.input_shape))
+    if len(model.input_shape)==1:
+        lool = model.input_shape[0][1:]
+    else:
+        print("model input shape: ", model.input_shape)
+        lool = model.input_shape[1:]
+    print("lool: ", lool)
+    for input_shape in lool:  # ignore 1st output, as is this control output
+        hidden = []
+        for i, shape in enumerate(input_shape):
+            if shape is None:
+                if i == 0:  # batch dim
+                    hidden.append(1)
+                    continue
+                elif i == 1:  # seq len dim
+                    hidden.append(0)
+                    continue
+                else:
+                    print("Unable to infer hidden state shape. Leaving as none")
+            hidden.append(shape)
+        hiddens.append(constructor(hidden))
+    return hiddens
 
 def compute_gradcam(img: Union[Tensor, ndarray], grad_model: Functional, hiddens: Sequence[Tensor],
                     pred_index: Optional[Sequence[Tensor]] = None):
@@ -94,6 +128,40 @@ def _compute_gradcam(img: Union[Tensor, ndarray], grad_model: Functional, hidden
 
     return heatmaps, hiddens
 
+
+def display_gradcam(heatmap):
+    """
+    Display the Grad-CAM heatmap using Matplotlib.
+
+    Args:
+    - heatmap: Grad-CAM heatmap (should be 2D).
+    """
+
+    # Convert Tensor to NumPy array if needed
+    if isinstance(heatmap, tf.Tensor):
+        heatmap = heatmap.numpy().squeeze()  # Remove batch dimension
+
+    # Ensure the heatmap has valid values
+    heatmap_min, heatmap_max = np.min(heatmap), np.max(heatmap)
+    print(f"Heatmap Min: {heatmap_min}, Heatmap Max: {heatmap_max}")
+
+    # Normalize heatmap to range [0, 255]
+    heatmap = (heatmap - heatmap_min) / (heatmap_max - heatmap_min + 1e-6)
+    heatmap = np.uint8(255 * heatmap)
+
+    # Resize heatmap to ensure visibility
+    heatmap = cv2.resize(heatmap, (256, 144))  # Resize to default shape
+
+    # Display heatmap using Matplotlib
+    plt.figure(figsize=(6, 4))
+    plt.imshow(heatmap, cmap="jet")
+    plt.colorbar()
+    plt.title("Grad-CAM Heatmap")
+    plt.axis("off")
+    plt.show()
+
+
+
 IMAGE_SHAPE = (144, 256, 3)
 IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
@@ -110,7 +178,8 @@ mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_si
 # mymodel.load_weights('model-ncp-val.hdf5')
 
 # custom model weights
-mymodel.load_weights('./saved_models/retrain_mix_goal_heights_diff_coreset_wscheduler0.85_seed22222_lr0.001_trainloss0.00008_epoch100.h5')
+# mymodel.load_weights('./saved_models/retrain_mix_goal_heights_diff_coreset_wscheduler0.85_seed22222_lr0.001_trainloss0.00008_epoch100.h5')
+mymodel.load_weights("./saved_models/retrain_difftraj_wscheduler0.85_seed22222_lr0.001_trainloss0.00016_valloss0.13141_diffcoreset900.h5")
 conv_layers = [layer for layer in mymodel.layers if isinstance(layer, Conv2D)]
 vis_model = tf.keras.models.Model(
         inputs=[mymodel.inputs],
@@ -121,10 +190,17 @@ print(vis_model.summary())
 def load_image(image_path):
     img = Image.open(image_path)
     img = img.resize(IMAGE_SHAPE_CV)
-    img_array = np.array(img)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = tf.convert_to_tensor(img_array)
+    img_array = np.array(img, dtype=np.float32)  # Convert to float32
+    img_array = img_array / 255.0  # Normalize pixel values (0-1)
+    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    img_array = tf.convert_to_tensor(img_array, dtype=tf.float32)  # Convert to Tensor
     return img_array
 
+
 img = load_image('../fly_to_target_dataset/diff_dataset/1/Image100.png')
-saliency_map = compute_gradcam(img, vis_model)
+vis_hiddens = generate_hidden_list(vis_model, False)
+saliency, vis_hiddens, sample_extra = compute_gradcam(img, vis_model, vis_hiddens)
+
+# Display Grad-CAM visualization
+display_gradcam(saliency)
+# cv2.imshow(saliency)
