@@ -27,7 +27,7 @@ def tlen(dataset):
         pass
     return ix
 
-training_root = "../uav_tracking_dataset/tracking_dataset_diff_images"
+training_root = "../uav_tracking_dataset/tracking_coreset"
 # val_root = "../fly_to_target_dataset/test_data"
 DROPOUT = 0.1
 
@@ -42,19 +42,19 @@ augmentation_params = None
 single_step = False
 no_norm_layer = False
 
-decay_rate: float = 0.85
+# decay_rate: float = 0.85
 lr: float = 0.0001
-lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
-                                                            decay_rate=decay_rate, staircase=True)
+# lr_schedule = keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=lr, decay_steps=500,
+#                                                             decay_rate=decay_rate, staircase=True)
 #Adam optimizer
-optimizer = keras.optimizers.Adam(learning_rate=lr_schedule)
+optimizer = keras.optimizers.Adam(learning_rate=lr)
 
 gpus = tf.config.list_logical_devices('GPU')
 strategy = tf.distribute.MirroredStrategy(gpus)
 with strategy.scope():
     mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
     mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
-    mymodel.load_weights('saved_models/retrain_150traj_wscheduler0.85_seed22222_lr0.001_trainloss0.00035_valloss0.00019_coreset900.h5')
+    mymodel.load_weights('saved_models/tracking_model_woscheduler_seed22222_lr0.0001_trainloss0.01087_epoch100.h5')
 
     mymodel.summary()
 
@@ -86,7 +86,7 @@ training_dataset = training_dataset.prefetch(tf.data.AUTOTUNE)
 validation_dataset = validation_dataset.prefetch(tf.data.AUTOTUNE)
 
 
-epochs: int = 50
+epochs: int = 100
 csv_logger = tf.keras.callbacks.CSVLogger('pipeline/training_log_tracking_model_wscheduler{decay_rate}_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.csv', separator=',', append=False)
 callbacks = None
 #setting validation data to None
@@ -95,7 +95,7 @@ print(history)
 
 # # Extract the final training and validation loss
 train_loss = history.history['loss'][-1]
-mymodel.save(f'saved_models/tracking_model_wscheduler{decay_rate}_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
+mymodel.save(f'saved_models/tracking_model_woscheduler_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
 # val_loss = history.history['val_loss'][-1]
 
 
