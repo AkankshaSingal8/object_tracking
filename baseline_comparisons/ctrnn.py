@@ -98,7 +98,8 @@ print(history)
 
 # Extract the final training and validation loss
 train_loss = history.history['loss'][-1]
-mymodel.save(f'./baseline_comparisons/ctrnn_mix_goal_{decay_rate}_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
+
+mymodel.save_weights(f'./baseline_comparisons/ctrnn_mix_goal_{decay_rate}_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
 # val_loss = history.history['val_loss'][-1]
 
 train_accuracy = mymodel.evaluate(x=training_dataset, verbose=1)
