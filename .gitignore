@@ -1,1 +1,2 @@
 *.pcd
+baseline_cnn/cnn_mix_goal_0.85_seed22222_lr0.0001_trainloss0.00081_epoch100.h5
