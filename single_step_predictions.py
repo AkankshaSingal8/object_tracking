@@ -33,11 +33,13 @@ def generate_hidden_list(model: Functional, return_numpy: bool = True):
     """
     constructor = np.zeros if return_numpy else tf.zeros
     hiddens = []
+    print("Length of model input shape: ", len(model.input_shape))
     if len(model.input_shape)==1:
         lool = model.input_shape[0][1:]
     else:
-        lool = model.input_shape[2:]
-
+        print("model input shape: ", model.input_shape)
+        lool = model.input_shape[1:]
+    print("lool: ", lool)
     for input_shape in lool:  # ignore 1st output, as is this control output
         hidden = []
         for i, shape in enumerate(input_shape):
@@ -69,9 +71,10 @@ single_step = True
 mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
 
 mymodel.load_weights('model_fine_tuned.h5')
-hiddens = generate_hidden_list(model=mymodel, return_numpy=True)
+hiddens = generate_hidden_list(model= mymodel, return_numpy=True)
+
 print(hiddens)
-hiddens = [0,0,0,0]
+
 print("Model loaded")
 
 for directory in range(1, 13):
@@ -89,11 +92,13 @@ for directory in range(1, 13):
         current_img_array = np.array(current_img)
         im_network = np.expand_dims(current_img_array, 0)
         hiddens = np.expand_dims(hiddens, 0)
-        print(hiddens.shape)
+        print("hidden shape:", hiddens.shape)
+        print("im network shape", im_network.shape)
         start = time.time()
         out = mymodel.predict([im_network, *hiddens])
         end= time.time()
         times.append(end - start)
+        print("Time taken: ", end - start)
         vel_cmd = out[0]  # shape: 1 x 4
         hiddens = out[1:] 
         predictions.append(vel_cmd)
