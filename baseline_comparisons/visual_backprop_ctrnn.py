@@ -18,21 +18,23 @@ from numpy import ndarray
 from tensorflow import keras, Tensor
 from tensorflow.keras.layers import Conv2D
 from tensorflow.python.keras.models import Functional
-from keras_models import generate_ncp_model, generate_cnn_model
+from keras_models import generate_ncp_model, generate_lstm_model, generate_ctrnn_model
 # from vis_utils import run_visualization, write_video
 
 DEFAULT_NCP_SEED = 22222
 IMAGE_SHAPE = (144, 256, 3)
 IMAGE_SHAPE_CV = (IMAGE_SHAPE[1], IMAGE_SHAPE[0])
 
+# CTRNNs
 batch_size = None
 seq_len = 64
 augmentation_params = None
 no_norm_layer = False
 single_step = True
-mymodel = generate_cnn_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, single_step, no_norm_layer)
+rnn_sizes = [252]
+mymodel = generate_ctrnn_model(rnn_sizes, seq_len, IMAGE_SHAPE, ct_network_type='ctrnn', single_step = True)
 
-root = '/src/drone_causality/object_tracking/baseline_cnn/cnn_mix_goal_0.85_seed22222_lr0.0001_trainloss0.00081_epoch100.h5'
+root = '/src/drone_causality/object_tracking/baseline_comparisons/ctrnn_mix_goal_0.85_seed22222_lr0.0001_trainloss0.00110_epoch100.h5'
 
 mymodel.load_weights(root)
 
@@ -132,8 +134,9 @@ def plot_saliency_map(saliency_map, image_size, root, file_path, title='Saliency
     print("Saved", file_path)
 
 for index in range(1,2):
-    root_directory = f'../gazebo_environment/markerless/diff_images'
-    saliency_directory = f'./saliency_maps_markerless_mix_heights'
+    # root_directory = f'../quadrant_wise_dataset/mix_goal_heights_diff/1'
+    root_directory = f'../fly_to_target_dataset/diff_dataset/1'
+    saliency_directory = f'./saliency_maps_marker_ctrnn'
     if not os.path.exists(saliency_directory):
         os.makedirs(saliency_directory, exist_ok=True)
     sorted_files = os.listdir(root_directory)
