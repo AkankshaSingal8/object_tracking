@@ -134,8 +134,9 @@ def plot_saliency_map(saliency_map, image_size, root, file_path, title='Saliency
 
 for index in range(1,2):
     # root_directory = f'../quadrant_wise_dataset/mix_goal_heights_diff/1'
-    root_directory = f'../fly_to_target_dataset/diff_dataset/1'
-    saliency_directory = f'./saliency_maps_marker_lstm'
+    # root_directory = f'../fly_to_target_dataset/diff_dataset/1'
+    root_directory = f'../gazebo_environment/markerless/diff_images'
+    saliency_directory = f'./baseline_comparisons/saliency_maps_markerless_lstm'
     if not os.path.exists(saliency_directory):
         os.makedirs(saliency_directory, exist_ok=True)
     sorted_files = os.listdir(root_directory)
