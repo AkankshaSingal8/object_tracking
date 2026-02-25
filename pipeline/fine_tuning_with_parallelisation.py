@@ -96,7 +96,7 @@ strategy = tf.distribute.MirroredStrategy(gpus)
 with strategy.scope():
     mymodel = generate_ncp_model(seq_len, IMAGE_SHAPE, augmentation_params, batch_size, DEFAULT_NCP_SEED, single_step, no_norm_layer)
     mymodel.compile(optimizer=optimizer, loss="mean_squared_error", metrics=['mse'])
-    mymodel.load_weights('saved_models/random_bg_nopretrainedwt_wscheduler0.85_seed22222_lr0.001_trainloss0.00894_epoch100.h5')
+    mymodel.load_weights('saved_models/coreset_random_bg_nopretrainedwt_wscheduler0.85_seed22222_lr0.0001_trainloss0.00454_epoch100.h5')
     mymodel.summary()
 
 shift: int = 1
@@ -109,10 +109,10 @@ val_split: float = 0.1
 label_scale: float = 1
 
 with tf.device('/cpu:0'):
-    training_dataset, validation_dataset = get_dataset_multi(training_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, background_dir=background_dir, extra_data_root=None)
+    training_dataset, validation_dataset = get_dataset_multi(training_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, background_dir=background_dir, extra_data_root=None, val_bg_mode="background")
     # val_data = get_val_dataset_multi(val_root, IMAGE_SHAPE, seq_len, shift, stride, val_split, label_scale, extra_data_root=None)
 
-training_dataset = training_dataset.shuffle(100).batch(64)
+training_dataset = training_dataset.shuffle(1000).batch(64)
 validation_dataset = validation_dataset.batch(64)
 # print('\n\nTraining Dataset Size: %d\n\n' % tlen(dataset))
 
@@ -128,12 +128,12 @@ def save_sequence(dataset, save_dir="debug_seq"):
         print(f"Saved sequence to {save_dir}")
         break
 
-save_sequence(training_dataset, save_dir="coreset_debug_seq_train")
-save_sequence(validation_dataset, save_dir="coreset_debug_seq_val")
+save_sequence(training_dataset, save_dir="v2_coreset_debug_seq_train")
+save_sequence(validation_dataset, save_dir="v2_coreset_debug_seq_val")
 
 save_sequence_montage(
     training_dataset,
-    save_path="pipeline/debug/coreset_train_montage.png",
+    save_path="pipeline/debug/v2_coreset_train_montage.png",
     max_frames=16,
     ncols=8
 )
@@ -141,7 +141,7 @@ save_sequence_montage(
 # Optional validation montage
 save_sequence_montage(
     validation_dataset,
-    save_path="pipeline/debug/coreset_val_montage.png",
+    save_path="pipeline/debug/v2_coreset_val_montage.png",
     title="Validation Sequence (Black Background)"
 )
 
@@ -154,8 +154,8 @@ training_dataset = training_dataset.prefetch(tf.data.AUTOTUNE)
 validation_dataset = validation_dataset.prefetch(tf.data.AUTOTUNE)
 
 
-epochs: int = 100
-csv_logger = tf.keras.callbacks.CSVLogger(f'pipeline/coreset_random_bg_wscheduler{decay_rate}_seed22222_lr{lr}_epoch{epochs}.csv', separator=',', append=False)
+epochs: int = 500
+csv_logger = tf.keras.callbacks.CSVLogger(f'pipeline/v2_coreset_random_bg_wscheduler{decay_rate}_seed22222_lr{lr}_epoch{epochs}.csv', separator=',', append=False)
 callbacks = None
 #setting validation data to None
 history = mymodel.fit(x=training_dataset, validation_data=validation_dataset, epochs=epochs,verbose=1, use_multiprocessing=False, workers=1, max_queue_size=5, callbacks=[csv_logger],)
@@ -163,7 +163,7 @@ print(history)
 
 # # Extract the final training and validation loss
 train_loss = history.history['loss'][-1]
-mymodel.save(f'saved_models/coreset_random_bg_nopretrainedwt_wscheduler{decay_rate}_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
+mymodel.save(f'saved_models/v2_coreset_random_bg_nopretrainedwt_wscheduler{decay_rate}_seed22222_lr{lr}_trainloss{train_loss:.5f}_epoch{epochs}.h5')
 # val_loss = history.history['val_loss'][-1]
 
 
